@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authAPI } from "../services/api";
@@ -16,7 +15,11 @@ export default function DaftarEOForm() {
   });
   const [confirmPassword, setConfirmPassword] = useState("");
   const [ktpFile, setKtpFile] = useState(null);
+  const [ktpPreview, setKtpPreview] = useState(null); // Tambahkan state untuk preview
+  const [uploadProgress, setUploadProgress] = useState(0); // Tambahkan state untuk progress
+  const [errorMsg, setErrorMsg] = useState(""); // Tambahkan state untuk error message
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
@@ -30,24 +33,32 @@ export default function DaftarEOForm() {
 
   const handleKtpChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      // Validasi tipe file
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('Hanya file JPG, JPEG, dan PNG yang diizinkan!');
-        e.target.value = ''; // Reset input file
-        return;
-      }
-      
-      // Validasi ukuran file (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Ukuran file maksimal 5MB!');
-        e.target.value = '';
-        return;
-      }
-      
-      setKtpFile(file);
+
+    // reset error & progress
+    setErrorMsg("");
+    setUploadProgress(0);
+
+    if (!file) return;
+
+    // ✅ Validasi format file JPG/PNG
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setErrorMsg("Format tidak valid. Hanya diperbolehkan JPG atau PNG.");
+      return;
     }
+
+    setKtpFile(file);
+
+    // Preview gambar
+    const imageUrl = URL.createObjectURL(file);
+    setKtpPreview(imageUrl);
+
+    // ✅ Progress bar simulasi upload (nanti bisa diganti ke upload backend)
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 10;
+      setUploadProgress(progress);
+      if (progress >= 100) clearInterval(interval);
+    }, 100);
   };
 
   const handleSubmit = async (e) => {
@@ -256,17 +267,55 @@ export default function DaftarEOForm() {
               className="w-full border border-gray-500 rounded-xl px-4 py-2 bg-gray-50 hover:bg-[#0C8CE9] cursor-pointer"
               required
             />
+            {/* Pesan error */}
+            {errorMsg && (
+              <p className="text-red-600 text-sm mt-1">{errorMsg}</p>
+            )}
+
+            {/* Progress bar */}
+            {uploadProgress > 0 && (
+              <div className="h-2 mt-2 bg-gray-300 rounded-xl overflow-hidden">
+                <div
+                  className="h-full bg-green-600 transition-all"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            )}
+
+            {/* Thumbnail preview */}
+            {ktpPreview && (
+              <img
+                src={ktpPreview}
+                alt="Preview KTP"
+                className="mt-3 w-40 rounded-lg shadow-md border cursor-pointer hover:opacity-80"
+                onClick={() => setIsModalOpen(true)}
+              />
+            )}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full mb-4 bg-[#044888] text-white py-2 rounded-xl hover:bg-[#0C8CE9] cursor-pointer transition-all disabled:opacity-50"
+            className="w-full mb-4 bg-[#044888] text-white py-2 rounded-xl hover:bg-[#0C8CE9] cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Loading..." : "Daftar"}
+            {loading ? "Mendaftarkan..." : "Daftar"}
           </button>
         </form>
       </div>
+
+      {/* ✅ Modal Preview Gambar KTP */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 flex justify-center items-center z-50"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <img
+            src={ktpPreview}
+            alt="KTP"
+            className="w-[80%] max-w-lg rounded-xl shadow-2xl border-2 border-white"
+          />
+        </div>
+      )}
     </div>
   );
 }
