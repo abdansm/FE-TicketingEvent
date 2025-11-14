@@ -38,4 +38,11 @@ export const eventAPI = {
   getEvent: (id) => api.get(`/api/event/${id}`),
 };
 
+export const cartAPI = {
+  addToCart: (cartData) => api.post('/api/cart', cartData),
+  getCart: () => api.get('/api/cart'),
+  updateCart: (updateData) => api.patch('/api/cart', updateData),
+  deleteCart: (deleteData) => api.delete('/api/cart', { data: deleteData }),
+};
+
 export default api;

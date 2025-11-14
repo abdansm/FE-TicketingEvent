@@ -9,9 +9,6 @@ export default function LoginPage() {
         {/* This is a JSX comment */}
         <Navbar/>
         <DaftarForm/>
-        
- 
-
     </div>
   ); 
 }

@@ -1,11 +1,14 @@
 import { useParams } from "react-router";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { MapPin, CalendarDays, Grid3X3 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import api from "../services/api";
 
 export default function EventDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   // Format Rupiah
   const formatRupiah = (angka) => {
@@ -16,35 +19,60 @@ export default function EventDetail() {
     }).format(angka);
   };
 
+  // Format tanggal dari backend
+  const formatDate = (dateStart, dateEnd) => {
+    const start = new Date(dateStart);
+    const end = new Date(dateEnd);
+
+    const formatOptions = { day: "numeric", month: "short", year: "numeric" };
+    const startFormatted = start.toLocaleDateString("id-ID", formatOptions);
+    const endFormatted = end.toLocaleDateString("id-ID", formatOptions);
+
+    if (startFormatted === endFormatted) {
+      return startFormatted;
+    }
+    return `${startFormatted} - ${endFormatted}`;
+  };
+
   const [event, setEvent] = useState(null);
   const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const dummy = {
-      id,
-      name: "Arima Kinen",
-      location:
-        "Jalan Intan Raya Blok I no.5, Pondok Timur Indah, Mustika Jaya, Kota Bekasi, Jawa Barat",
-      date: "29 Nov 2025 - 30 Nov 2025",
-      category: "Olahraga",
-      description:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.",
-      image:
-        "https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?q=80&w=800",
-      organizer: {
-        name: "Seseorang yang sangat tampan",
-        photo:
-          "https://cdn2.steamgriddb.com/icon_thumb/4cf54a3d780b9294815e5f249164f20f.png",
-      },
-      tickets: [
-        { type: "Dewasa", desc: "Untuk usia 20 ke atas", price: 120000, stock: 5 },
-        { type: "Remaja", desc: "Untuk usia 13 - 19 tahun", price: 100000, stock: 3 },
-        { type: "Anak", desc: "Untuk usia 12 ke bawah", price: 90000, stock: 10 },
-      ],
+    const fetchEventDetail = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.get(`/api/event/${id}`);
+        const eventData = response.data;
+
+        setEvent(eventData);
+
+        // Format ticket categories untuk state tickets
+        const formattedTickets = eventData.ticket_categories.map((ticket) => ({
+          ticket_category_id: ticket.ticket_category_id,
+          type: ticket.name,
+          desc: ticket.description || "Tiket masuk event",
+          price: ticket.price,
+          stock: ticket.quota - ticket.sold,
+          quota: ticket.quota,
+          sold: ticket.sold,
+          qty: 0,
+        }));
+
+        setTickets(formattedTickets);
+      } catch (err) {
+        console.error("Error fetching event detail:", err);
+        setError("Gagal memuat detail event");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setEvent(dummy);
-    setTickets(dummy.tickets.map((t) => ({ ...t, qty: 0 }))); // Awal 0
+    if (id) {
+      fetchEventDetail();
+    }
   }, [id]);
 
   const updateQty = (index, delta) => {
@@ -57,12 +85,78 @@ export default function EventDetail() {
     );
   };
 
-  if (!event) return <div>Loading...</div>;
+  const handleAddToCart = async () => {
+    try {
+      // Siapkan data untuk dikirim ke cart sesuai struktur backend
+      const cartItems = tickets
+        .filter((ticket) => ticket.qty > 0)
+        .map((ticket) => ({
+          ticket_category_id: ticket.ticket_category_id,
+          quantity: ticket.qty,
+        }));
 
-  const totalHarga = tickets.reduce(
-    (sum, t) => sum + t.price * t.qty,
-    0
-  );
+      if (cartItems.length === 0) {
+        alert("Pilih setidaknya satu tiket");
+        return;
+      }
+
+      // Kirim setiap item cart secara individual
+      const promises = cartItems.map((item) => api.post("/api/cart", item));
+
+      // Tunggu semua request selesai
+      const results = await Promise.all(promises);
+
+      // Cek jika semua berhasil
+      const allSuccess = results.every((result) => result.status === 201);
+
+      if (allSuccess) {
+        alert("Tiket berhasil dimasukkan ke keranjang!");
+        // Reset quantity setelah berhasil ditambahkan
+        setTickets((prev) => prev.map((t) => ({ ...t, qty: 0 })));
+      } else {
+        throw new Error("Beberapa tiket gagal ditambahkan");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      if (error.response?.data?.error) {
+        alert(`Gagal menambahkan tiket: ${error.response.data.error}`);
+      } else {
+        alert("Gagal menambahkan tiket ke keranjang");
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div>
+        <Navbar />
+        <div className="min-h-screen bg-[#E5E7EB] flex items-center justify-center pt-36">
+          <div className="text-lg">Memuat detail event...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !event) {
+    return (
+      <div>
+        <Navbar />
+        <div className="min-h-screen bg-[#E5E7EB] flex items-center justify-center pt-36">
+          <div className="text-lg text-red-600">
+            {error || "Event tidak ditemukan"}
+          </div>
+          <button
+            onClick={() => navigate("/cari-event")}
+            className="ml-4 bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Kembali ke Cari Event
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const totalHarga = tickets.reduce((sum, t) => sum + t.price * t.qty, 0);
   const adaTiketDipilih = tickets.some((t) => t.qty > 0);
 
   return (
@@ -80,11 +174,11 @@ export default function EventDetail() {
               <div className="space-y-2 text-gray-700 text-sm">
                 <p className="flex items-start gap-2">
                   <MapPin className="w-5 h-5 text-[#0C8CE9] shrink-0" />
-                  {event.location}
+                  {event.location}, {event.city}
                 </p>
                 <p className="flex items-center gap-2">
                   <CalendarDays className="w-5 h-5 text-[#0C8CE9]" />
-                  {event.date}
+                  {formatDate(event.date_start, event.date_end)}
                 </p>
                 <p className="flex items-center gap-2">
                   <Grid3X3 className="w-5 h-5 text-[#0C8CE9]" />
@@ -104,48 +198,66 @@ export default function EventDetail() {
               <div className="mt-8">
                 <h2 className="text-xl font-semibold mb-4">Pilihan Tiket</h2>
 
-                <div className="space-y-4">
-                  {tickets.map((ticket, index) => (
-                    <div
-                      key={index}
-                      className="border rounded-md p-3 flex justify-between items-center hover:shadow-md transition-all"
-                    >
-                      <div>
-                        <p className="font-semibold">{ticket.type}</p>
-                        <p className="text-xs text-gray-600">
-                          Keterangan: {ticket.desc}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Stok: {ticket.stock}
-                        </p>
-                        <p className="text-sm text-red-900 font-semibold mt-1">
-                          {formatRupiah(ticket.price)}
-                        </p>
-                      </div>
+                {tickets.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Belum ada tiket tersedia untuk event ini
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {tickets.map((ticket, index) => (
+                      <div
+                        key={ticket.ticket_category_id}
+                        className="border rounded-md p-3 flex justify-between items-center hover:shadow-md transition-all"
+                      >
+                        <div className="flex-1">
+                          <p className="font-semibold">{ticket.type}</p>
+                          <p className="text-xs text-gray-600">{ticket.desc}</p>
+                          <div className="flex gap-4 mt-1">
+                            <p className="text-xs text-gray-500">
+                              Stok: {ticket.stock} / {ticket.quota}
+                            </p>
+                            {ticket.stock === 0 && (
+                              <span className="text-xs text-red-500 font-semibold">
+                                HABIS
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-red-900 font-semibold mt-1">
+                            {formatRupiah(ticket.price)}
+                          </p>
+                        </div>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => updateQty(index, -1)}
-                          className="px-2 py-1 border rounded hover:bg-gray-200"
-                        >
-                          −
-                        </button>
-                        <span className="w-5 text-center">{ticket.qty}</span>
-                        <button
-                          onClick={() => updateQty(index, 1)}
-                          className={`px-2 py-1 border rounded ${
-                            ticket.qty >= ticket.stock
-                              ? "opacity-50 cursor-not-allowed"
-                              : "hover:bg-gray-200"
-                          }`}
-                          disabled={ticket.qty >= ticket.stock}
-                        >
-                          +
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateQty(index, -1)}
+                            disabled={ticket.qty === 0}
+                            className={`px-2 py-1 border rounded ${
+                              ticket.qty === 0
+                                ? "opacity-50 cursor-not-allowed"
+                                : "hover:bg-gray-200"
+                            }`}
+                          >
+                            −
+                          </button>
+                          <span className="w-5 text-center">{ticket.qty}</span>
+                          <button
+                            onClick={() => updateQty(index, 1)}
+                            className={`px-2 py-1 border rounded ${
+                              ticket.qty >= ticket.stock || ticket.stock === 0
+                                ? "opacity-50 cursor-not-allowed"
+                                : "hover:bg-gray-200"
+                            }`}
+                            disabled={
+                              ticket.qty >= ticket.stock || ticket.stock === 0
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -154,11 +266,30 @@ export default function EventDetail() {
               {/* Gambar utama ratio 1:1 */}
               <div className="rounded-md overflow-hidden shadow-md aspect-square">
                 <img
-                  src={event.image}
+                  src={
+                    event.image ||
+                    "https://cdn2.steamgriddb.com/icon_thumb/63872edc3fa52d645b3d48f6d98caf2c.png"
+                  }
                   alt={event.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src =
+                      "https://cdn2.steamgriddb.com/icon_thumb/63872edc3fa52d645b3d48f6d98caf2c.png";
+                  }}
                 />
               </div>
+
+              {/* Flyer jika ada */}
+              {event.flyer && (
+                <div className="border rounded-md p-4 shadow-sm">
+                  <h3 className="text-base font-semibold mb-2">Flyer Event</h3>
+                  <img
+                    src={event.flyer}
+                    alt={`Flyer ${event.name}`}
+                    className="w-full rounded-md"
+                  />
+                </div>
+              )}
 
               {/* Penyelenggara */}
               <div className="border rounded-md p-4 shadow-sm flex flex-col">
@@ -166,16 +297,37 @@ export default function EventDetail() {
                   Penyelenggara
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-16 aspect-square rounded-full overflow-hidden shrink-0 border">
-                    <img
-                      src={event.organizer.photo}
-                      alt={event.organizer.name}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-16 aspect-square rounded-full overflow-hidden shrink-0 border bg-gray-200 flex items-center justify-center">
+                    {event.owner?.profile_pict ? (
+                      <img
+                        src={event.owner.profile_pict}
+                        alt={event.owner.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "block";
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-full h-full flex items-center justify-center bg-blue-500 text-white font-semibold text-lg"
+                      style={{
+                        display: event.owner?.profile_pict ? "none" : "flex",
+                      }}
+                    >
+                      {event.owner?.name?.charAt(0) || "O"}
+                    </div>
                   </div>
-                  <p className="text-base font-medium text-gray-800 truncate">
-                    {event.organizer.name}
-                  </p>
+                  <div>
+                    <p className="text-base font-medium text-gray-800">
+                      {event.owner?.name || "Organizer"}
+                    </p>
+                    {event.owner?.organization && (
+                      <p className="text-sm text-gray-600">
+                        {event.owner.organization}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -197,7 +349,7 @@ export default function EventDetail() {
                     </p>
                     <button
                       className="bg-[#0C8CE9] text-white font-medium px-6 py-2 rounded-lg hover:bg-[#0A6FC4] shadow transition-all"
-                      onClick={() => alert("Tiket dimasukkan ke keranjang!")}
+                      onClick={handleAddToCart}
                     >
                       Masukkan ke Keranjang
                     </button>
