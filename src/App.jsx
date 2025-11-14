@@ -6,6 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import CariEvent from "./Pages/CariEventPage";
 import EventDetail from "./Pages/DetailEventPage";
 import EventRegister from "./Pages/EventRegister";
+import Keranjang from "./Pages/KeranjangPage";
+
+
+
 
 function App() {
   return (
@@ -19,6 +23,7 @@ function App() {
           <Route path="/daftar-event" element={<EventRegister />} />
           <Route path="/cariEvent/:namaEvent?" element={<CariEvent />} />
           <Route path="/detailEvent/:id" element={<EventDetail />} />
+         <Route path="/keranjang" element={<Keranjang />} />
         </Routes>
       </BrowserRouter>
 
