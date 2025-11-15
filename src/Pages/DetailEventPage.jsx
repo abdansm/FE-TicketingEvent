@@ -132,7 +132,7 @@ export default function EventDetail() {
         <Navbar />
         <div className="min-h-screen bg-[#E5E7EB] flex items-center justify-center pt-36">
           <div className="text-lg">Memuat detail event...</div>
-        </div>
+        </div>ces
       </div>
     );
   }
