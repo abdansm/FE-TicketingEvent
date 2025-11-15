@@ -1,6 +1,14 @@
-import { Menu, Search, ShoppingCart, X, CircleUser, LogOut, User } from "lucide-react";
+import {
+  Menu,
+  Search,
+  ShoppingCart,
+  X,
+  CircleUser,
+  LogOut,
+  User,
+} from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { Link, NavLink, useNavigate } from "react-router"
+import { Link, NavLink, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar() {
@@ -14,7 +22,7 @@ export default function Navbar() {
 
   useEffect(() => {
     // Get user data from sessionStorage
-    const userData = sessionStorage.getItem('user');
+    const userData = sessionStorage.getItem("user");
     if (userData) {
       setUser(JSON.parse(userData));
     }
@@ -26,9 +34,9 @@ export default function Navbar() {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -52,15 +60,15 @@ export default function Navbar() {
 
   const handleLogout = () => {
     // Clear session storage
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
-    
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+
     // Reset state
     setUser(null);
     setProfileDropdownOpen(false);
-    
+
     // Navigate to landing page
-    navigate('/');
+    navigate("/");
   };
 
   const handleProfileClick = () => {
@@ -74,8 +82,8 @@ export default function Navbar() {
       return;
     }
 
-    if (getUserRole() === 'user') {
-      navigate('/keranjang');
+    if (getUserRole() === "user") {
+      navigate("/keranjang");
     } else {
       setNotificationMessage("Fitur ini hanya tersedia untuk User");
       setShowAccessNotification(true);
@@ -84,15 +92,19 @@ export default function Navbar() {
 
   const handleViewProfile = () => {
     setProfileDropdownOpen(false);
-    navigate('/lihat-profil');
+    navigate("/lihat-profil");
   };
 
   const getRoleDisplayName = (role) => {
-    switch(role) {
-      case 'user': return 'User';
-      case 'organizer': return 'Event Organizer';
-      case 'admin': return 'Administrator';
-      default: return 'User';
+    switch (role) {
+      case "user":
+        return "User";
+      case "organizer":
+        return "Event Organizer";
+      case "admin":
+        return "Administrator";
+      default:
+        return "User";
     }
   };
 
@@ -143,7 +155,6 @@ export default function Navbar() {
                   <span className="text-white">RIA.COM</span>
                 </span>
               </Link>
-
             </div>
 
             {/* SEARCH BAR */}
@@ -162,7 +173,7 @@ export default function Navbar() {
 
             {/* RIGHT BUTTONS */}
             <div className="flex items-center space-x-4 lg:space-x-6">
-              <button 
+              <button
                 className="text-white hover:text-amber-400 cursor-pointer flex items-center justify-center"
                 onClick={handleShoppingCartClick}
               >
@@ -170,13 +181,13 @@ export default function Navbar() {
               </button>
               {isLoggedIn() ? (
                 <div className="relative" ref={dropdownRef}>
-                  <button 
+                  <button
                     className="text-white hover:text-amber-400 cursor-pointer transition-all flex items-center justify-center"
                     onClick={handleProfileClick}
                   >
                     <CircleUser className="w-7 h-7 md:w-8 md:h-8" />
                   </button>
-                  
+
                   {/* Profile Dropdown - POSITION ABSOLUTE dengan container relative */}
                   {profileDropdownOpen && (
                     <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-60">
@@ -196,18 +207,18 @@ export default function Navbar() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Menu Items */}
                       <div className="p-2">
-                        <button 
+                        <button
                           onClick={handleViewProfile}
                           className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-all"
                         >
                           <User className="w-4 h-4" />
                           <span>Lihat Profil</span>
                         </button>
-                        
-                        <button 
+
+                        <button
                           onClick={handleLogout}
                           className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md cursor-pointer transition-all"
                         >
@@ -237,30 +248,36 @@ export default function Navbar() {
             <NavLink
               to="/cariEvent"
               className={({ isActive }) =>
-                isActive ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white" : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                isActive
+                  ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                  : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
               }
             >
               Cari Event
             </NavLink>
-            
+
             {/* Menu untuk User - HANYA muncul jika login DAN role user */}
-            {isLoggedIn() && getUserRole() === 'user' && (
+            {isLoggedIn() && getUserRole() === "user" && (
               <NavLink
                 to="/tiket-saya"
                 className={({ isActive }) =>
-                  isActive ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white" : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                  isActive
+                    ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                    : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
                 }
               >
                 Tiket Saya
               </NavLink>
             )}
-            
+
             {/* Menu untuk Organizer - HANYA muncul jika login DAN role organizer */}
-            {isLoggedIn() && getUserRole() === 'organizer' && (
+            {isLoggedIn() && getUserRole() === "organizer" && (
               <NavLink
                 to="/daftar-event"
                 className={({ isActive }) =>
-                  isActive ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white" : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                  isActive
+                    ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                    : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
                 }
               >
                 Buat Event
@@ -268,35 +285,44 @@ export default function Navbar() {
             )}
 
             {/* Menu untuk Organizer - HANYA muncul jika login DAN role organizer */}
-            {isLoggedIn() && getUserRole() === 'organizer' && (
+            {isLoggedIn() && getUserRole() === "organizer" && (
               <NavLink
                 to="/event-saya"
                 className={({ isActive }) =>
-                  isActive ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white" : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                  isActive
+                    ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                    : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
                 }
               >
                 Event Saya
               </NavLink>
             )}
-            
+
             {/* Menu untuk Admin - HANYA muncul jika login DAN role admin */}
-            {isLoggedIn() && getUserRole() === 'admin' && (
+            {isLoggedIn() && getUserRole() === "admin" && (
               <NavLink
                 to="/verifikasi-event"
                 className={({ isActive }) =>
-                  isActive ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white" : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                  isActive
+                    ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                    : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
                 }
               >
                 Verifikasi Event
               </NavLink>
             )}
-            
-            <a
-              href="#"
-              className="text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+
+            <NavLink
+              to="/"
+              state={{ scrollToPopular: true }}
+              className={({ isActive }) =>
+                isActive
+                  ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                  : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+              }
             >
               Event Populer
-            </a>
+            </NavLink>
           </div>
         </div>
       </nav>
@@ -305,7 +331,6 @@ export default function Navbar() {
       <nav className="fixed md:hidden top-16 sm:top-18 w-full z-40 transition-all duration-10 bg-[#0C8CE9]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="items-center h-18 bg-[#0C8CE9]">
-
             {/* SearchBar (Mobile ONLY) */}
             <div className="relative">
               <form action="">
@@ -325,15 +350,15 @@ export default function Navbar() {
 
       {/* DRAWER SIDE MENU */}
       <div
-        className={`${mobileMenuIsOpen
-            ? "fixed inset-0 drawer-visible"
-            : "drawer-hidden"
-          } z-50 transition-all duration-300 bg-black/50`}
+        className={`${
+          mobileMenuIsOpen ? "fixed inset-0 drawer-visible" : "drawer-hidden"
+        } z-50 transition-all duration-300 bg-black/50`}
         onClick={() => setMobileMenuIsOpen(false)}
       >
         <div
-          className={`${mobileMenuIsOpen ? "animate-slideIn" : "animate-slideOut"
-            } absolute top-0 left-0 w-75 z-50 h-full bg-[#044888] shadow-xl p-6 flex flex-col`}
+          className={`${
+            mobileMenuIsOpen ? "animate-slideIn" : "animate-slideOut"
+          } absolute top-0 left-0 w-75 z-50 h-full bg-[#044888] shadow-xl p-6 flex flex-col`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* CLOSE BUTTON */}
@@ -352,9 +377,9 @@ export default function Navbar() {
           >
             Cari Event
           </NavLink>
-          
+
           {/* Menu untuk User - HANYA muncul jika login DAN role user */}
-          {isLoggedIn() && getUserRole() === 'user' && (
+          {isLoggedIn() && getUserRole() === "user" && (
             <NavLink
               to="/tiket-saya"
               className="text-white text-lg font-semibold mb-4 hover:text-[#0C8CE9]"
@@ -363,9 +388,9 @@ export default function Navbar() {
               Tiket Saya
             </NavLink>
           )}
-          
+
           {/* Menu untuk Organizer - HANYA muncul jika login DAN role organizer */}
-          {isLoggedIn() && getUserRole() === 'organizer' && (
+          {isLoggedIn() && getUserRole() === "organizer" && (
             <NavLink
               to="/daftar-event"
               className="text-white text-lg font-semibold mb-4 hover:text-[#0C8CE9]"
@@ -376,7 +401,7 @@ export default function Navbar() {
           )}
 
           {/* Menu untuk Organizer - HANYA muncul jika login DAN role organizer */}
-          {isLoggedIn() && getUserRole() === 'organizer' && (
+          {isLoggedIn() && getUserRole() === "organizer" && (
             <NavLink
               to="/event-saya"
               className="text-white text-lg font-semibold mb-4 hover:text-[#0C8CE9]"
@@ -385,9 +410,9 @@ export default function Navbar() {
               Event Saya
             </NavLink>
           )}
-          
+
           {/* Menu untuk Admin - HANYA muncul jika login DAN role admin */}
-          {isLoggedIn() && getUserRole() === 'admin' && (
+          {isLoggedIn() && getUserRole() === "admin" && (
             <NavLink
               to="/verifikasi-event"
               className="text-white text-lg font-semibold mb-4 hover:text-[#0C8CE9]"
@@ -396,13 +421,15 @@ export default function Navbar() {
               Verifikasi Event
             </NavLink>
           )}
-          
-          <a
-            href="#"
+
+          <NavLink
+            to="/"
+            state={{ scrollToPopular: true }}
             className="text-white text-lg font-semibold mb-4 hover:text-[#0C8CE9]"
+            onClick={() => setMobileMenuIsOpen(false)}
           >
             Event Populer
-          </a>
+          </NavLink>
         </div>
       </div>
     </div>
