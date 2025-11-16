@@ -52,6 +52,7 @@ export const eventAPI = {
   getEvents: () => api.get('/api/events'),
   getEvent: (id) => api.get(`/api/event/${id}`),
   getEventsPopular: () => api.get('/api/events/popular'),
+  getMyEvents: () => api.get('/api/events/my-events'), // Tambahkan ini
   createEvent: (formData) => {
     const token = sessionStorage.getItem('token');
     return axios.post(`${API_BASE_URL}/api/events`, formData, {
