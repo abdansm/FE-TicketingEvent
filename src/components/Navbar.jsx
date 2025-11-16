@@ -3,6 +3,7 @@ import {
   Search,
   ShoppingCart,
   X,
+  History,
   CircleUser,
   LogOut,
   User,
@@ -95,18 +96,23 @@ export default function Navbar() {
     navigate("/lihat-profil");
   };
 
+  const handleViewTransactionHistory = () => {
+    setProfileDropdownOpen(false);
+    navigate("/riwayat-transaksi");
+  };
+
   // Search handler
-const handleSearchSubmit = (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const searchQuery = formData.get('search');
-  
-  if (searchQuery && searchQuery.trim() !== '') {
-    navigate(`/cariEvent/${encodeURIComponent(searchQuery.trim())}`);
-    // Clear form setelah submit
-    e.target.reset();
-  }
-};
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const searchQuery = formData.get("search");
+
+    if (searchQuery && searchQuery.trim() !== "") {
+      navigate(`/cariEvent/${encodeURIComponent(searchQuery.trim())}`);
+      // Clear form setelah submit
+      e.target.reset();
+    }
+  };
 
   const getRoleDisplayName = (role) => {
     switch (role) {
@@ -234,6 +240,16 @@ const handleSearchSubmit = (e) => {
                           <User className="w-4 h-4" />
                           <span>Lihat Profil</span>
                         </button>
+
+                        {isLoggedIn() && getUserRole() === "user" && (
+                          <button
+                            onClick={handleViewTransactionHistory}
+                            className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-all"
+                          >
+                            <History className="w-4 h-4" />
+                            <span>Riwayat Pembelian</span>
+                          </button>
+                        )}
 
                         <button
                           onClick={handleLogout}

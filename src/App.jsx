@@ -13,6 +13,7 @@ import VerifikasiEvent from "./Pages/VerifikasiEventPage";
 import LihatProfilPage from "./Pages/LihatProfilPage";
 import VerifikasiUserPage from "./Pages/VerifikasiUserPage"
 import TinjauUserDetailPage from "./Pages/TinjauUserDetailPage"
+import RiwayatTransaksi from "./Pages/RiwayatPembelianPage";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path="/event-saya" element={<EventSaya />} />
           <Route path="/verifikasi-event" element={<VerifikasiEvent />} />
           <Route path="/lihat-profil" element={<LihatProfilPage />} />
+           <Route path="/riwayat-transaksi" element={<RiwayatTransaksi />} />
         </Routes>
       </BrowserRouter>
     </div>
