@@ -23,7 +23,8 @@ export default function LandingPage() {
       date: "29 Nov 2025 - 30 Nov 2025",
       price: 100000,
       poster: "https://picsum.photos/800/800?random=11",
-      banner: "https://gametora.com/images/umamusume/en/gacha/img_bnr_gacha_30040.png",
+      banner:
+        "https://gametora.com/images/umamusume/en/gacha/img_bnr_gacha_30040.png",
     },
     {
       id: 2,
@@ -31,7 +32,8 @@ export default function LandingPage() {
       date: "15 Des 2025 - 17 Des 2025",
       price: 150000,
       poster: "https://picsum.photos/800/800?random=22",
-      banner: "https://cdn2.steamgriddb.com/hero_thumb/beac6d8fdd97a5e184ace84f9988a0fc.jpg",
+      banner:
+        "https://cdn2.steamgriddb.com/hero_thumb/beac6d8fdd97a5e184ace84f9988a0fc.jpg",
     },
     {
       id: 3,
@@ -39,15 +41,18 @@ export default function LandingPage() {
       date: "10 Jan 2026",
       price: 200000,
       poster: "https://picsum.photos/800/800?random=33",
-      banner: "https://cdn2.steamgriddb.com/hero_thumb/6c528267ba256819c1607cddbd7b650b.jpg",
+      banner:
+        "https://cdn2.steamgriddb.com/hero_thumb/6c528267ba256819c1607cddbd7b650b.jpg",
     },
     {
       id: 4,
       name: "Art Exhibition Jogja",
       date: "22 Feb 2026 - 25 Feb 2026",
       price: 120000,
-      poster: "https://cdn2.steamgriddb.com/icon_thumb/4cf54a3d780b9294815e5f249164f20f.png",
-      banner: "https://cdn2.steamgriddb.com/hero_thumb/64118b7020f3dc8d26b09149d29050cf.jpg",
+      poster:
+        "https://cdn2.steamgriddb.com/icon_thumb/4cf54a3d780b9294815e5f249164f20f.png",
+      banner:
+        "https://cdn2.steamgriddb.com/hero_thumb/64118b7020f3dc8d26b09149d29050cf.jpg",
     },
   ]);
 
@@ -76,7 +81,9 @@ export default function LandingPage() {
 
   const handlePrev = useCallback(() => {
     setIsAnimating(true);
-    setCurrentBanner((prev) => (prev - 1 + bannerEvents.length) % bannerEvents.length);
+    setCurrentBanner(
+      (prev) => (prev - 1 + bannerEvents.length) % bannerEvents.length
+    );
     setTimeout(() => setIsAnimating(false), 600);
   }, [bannerEvents.length]);
 
@@ -90,9 +97,13 @@ export default function LandingPage() {
   };
 
   const handleDragEnd = (event, info) => {
-    setIsDragging(false);
-    const threshold = 100;
-    
+  setIsDragging(false);
+  const threshold = 100;
+
+  // HENTIKAN DRAG DULU dan tunggu momentum berhenti
+  setDragX(0);
+  
+  setTimeout(() => {
     if (info.offset.x < -threshold) {
       handleNext(); // Drag ke kiri
     } else if (info.offset.x > threshold) {
@@ -100,11 +111,10 @@ export default function LandingPage() {
     } else {
       // Jika drag tidak mencapai threshold, kembali ke posisi semula dengan animasi
       setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 600);
+      setTimeout(() => setIsAnimating(false), 400);
     }
-    
-    setDragX(0);
-  };
+  }, 50); // Delay 50ms untuk pastikan momentum spring berhenti
+};
 
   // Touch swipe handlers
   const handleTouchStart = (e) => {
@@ -117,7 +127,7 @@ export default function LandingPage() {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const minSwipeDistance = 50;
 
@@ -148,9 +158,8 @@ export default function LandingPage() {
 
       <div className="min-h-screen bg-[#E5E7EB] flex items-start justify-center p-4 overflow-auto">
         <div className="min-h-screen w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-40 bg-white shadow-xl p-8 rounded-2xl">
-
           {/* Banner Slider */}
-          <div 
+          <div
             className="w-full aspect-16/6 rounded-xl mb-10 overflow-hidden relative shadow-lg bg-gray-900"
             onMouseEnter={() => setShowArrows(true)}
             onMouseLeave={() => setShowArrows(false)}
@@ -159,7 +168,7 @@ export default function LandingPage() {
             onTouchEnd={handleTouchEnd}
           >
             {/* Container utama untuk drag + animasi */}
-            <motion.div 
+            <motion.div
               className="relative w-full h-full cursor-grab active:cursor-grabbing"
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
@@ -172,19 +181,21 @@ export default function LandingPage() {
               {bannerEvents.map((event, index) => (
                 <motion.div
                   key={event.id}
-                  className={`absolute top-0 left-0 w-full h-full ${index === currentBanner ? 'z-10' : 'z-0'}`}
+                  className={`absolute top-0 left-0 w-full h-full ${
+                    index === currentBanner ? "z-10" : "z-0"
+                  }`}
                   // Animasi position berdasarkan state
                   animate={{
-                    x: `${(index - currentBanner) * 100}%`
+                    x: `${(index - currentBanner) * 100}%`,
                   }}
                   // Transition yang berbeda untuk drag vs animasi biasa
                   transition={
-                    isDragging 
-                      ? { type: "spring", stiffness: 300, damping: 30 } // Real-time selama drag
-                      : { 
-                          type: "tween", 
-                          duration: 0.6, // Lebih smooth - 0.6 detik
-                          ease: [0.25, 0.46, 0.45, 0.94] // easeOutQuad untuk natural feeling
+                    isDragging
+                      ? { type: "tween", duration: 0.1 } // Real-time selama drag
+                      : {
+                          type: "tween",
+                          duration: 0.5, // ⬅️ LEBIH CEPAT SEDIKIT
+                          ease: [0.25, 0.46, 0.45, 0.94] // ⬅️ MATERIAL EASING - NO OVERSHOOT
                         }
                   }
                 >
@@ -200,7 +211,11 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Navigation Arrows */}
-            <div className={`absolute inset-0 flex items-center justify-between px-4 transition-opacity duration-300 ${showArrows ? 'opacity-100' : 'opacity-0'}`}>
+            <div
+              className={`absolute inset-0 flex items-center justify-between px-4 transition-opacity duration-300 ${
+                showArrows ? "opacity-100" : "opacity-0"
+              }`}
+            >
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -232,7 +247,9 @@ export default function LandingPage() {
                     setCurrentBanner(i);
                   }}
                   className={`w-3 h-3 rounded-full transition-all ${
-                    i === currentBanner ? "bg-white" : "bg-white/50 hover:bg-white/80"
+                    i === currentBanner
+                      ? "bg-white"
+                      : "bg-white/50 hover:bg-white/80"
                   }`}
                 />
               ))}
@@ -280,7 +297,6 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-
         </div>
       </div>
     </div>
