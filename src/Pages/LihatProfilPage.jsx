@@ -200,7 +200,7 @@ export default function LihatProfilPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Deskripsi Organisasi
                         </label>
-                        <p className="text-lg p-2 bg-gray-50 rounded min-h-[80px]">
+                        <p className="text-lg p-2 bg-gray-50 rounded min-h-20">
                           {user.organization_description || "-"}
                         </p>
                       </div>
