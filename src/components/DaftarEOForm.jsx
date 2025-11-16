@@ -27,6 +27,58 @@ export default function DaftarEOForm() {
   const { notification, showNotification, hideNotification } =
     useNotification();
 
+  // Fungsi untuk menangani perubahan input text
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Fungsi untuk menangani perubahan file KTP
+  const handleKtpChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validasi tipe file
+      const validTypes = ["image/jpeg", "image/jpg", "image/png"];
+      if (!validTypes.includes(file.type)) {
+        setErrorMsg("Hanya file JPG, JPEG, atau PNG yang diizinkan!");
+        setKtpFile(null);
+        setKtpPreview(null);
+        return;
+      }
+
+      // Validasi ukuran file (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMsg("Ukuran file maksimal 5MB!");
+        setKtpFile(null);
+        setKtpPreview(null);
+        return;
+      }
+
+      setErrorMsg("");
+      setKtpFile(file);
+
+      // Buat preview gambar
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setKtpPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+
+      // Simulasi progress upload
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setUploadProgress(progress);
+        if (progress >= 100) {
+          clearInterval(interval);
+        }
+      }, 100);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 

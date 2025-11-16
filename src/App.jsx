@@ -11,7 +11,8 @@ import TiketSaya from "./Pages/TiketSayaPage";
 import EventSaya from "./Pages/EventSayaPage";
 import VerifikasiEvent from "./Pages/VerifikasiEventPage";
 import LihatProfilPage from "./Pages/LihatProfilPage";
-
+import VerifikasiUserPage from "./Pages/VerifikasiUserPage"
+import TinjauUserDetailPage from "./Pages/TinjauUserDetailPage"
 
 function App() {
   return (
@@ -24,6 +25,8 @@ function App() {
           <Route path="/daftarEO" element={<DaftarEOPage />} />
           <Route path="/daftar-event" element={<EventRegister />} />
           <Route path="/cariEvent/:namaEvent?" element={<CariEvent />} />
+          <Route path="/verifikasiUser" element={<VerifikasiUserPage />} />
+          <Route path="/tinjauUser/:id" element={<TinjauUserDetailPage />} />
           <Route path="/detailEvent/:id" element={<EventDetail />} />
           <Route path="/keranjang" element={<Keranjang />} />
           {/* Route baru untuk role-based pages */}
