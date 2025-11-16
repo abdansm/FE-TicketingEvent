@@ -9,6 +9,7 @@ export default function LaporanEventPage() {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const [reportData, setReportData] = useState(null);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,7 +21,22 @@ export default function LaporanEventPage() {
     try {
       setLoading(true);
       const response = await eventAPI.getEventReport(eventId);
-      setReportData(response.data);
+      
+      // Sesuaikan dengan struktur response backend
+      if (response.data.report) {
+        setReportData(response.data.report);
+        setMetrics(response.data.metrics);
+      } else {
+        // Fallback untuk struktur lama (jika ada)
+        setReportData(response.data);
+        setMetrics({
+          total_attendant: response.data.total_checkins || 0,
+          total_tickets_sold: response.data.total_tickets_sold || 0,
+          total_sales: response.data.total_income || 0,
+          sold_percentage: "0%",
+          attendance_rate: "0%"
+        });
+      }
     } catch (err) {
       console.error("Error fetching event report:", err);
       setError("Gagal memuat laporan event");
@@ -81,7 +97,7 @@ export default function LaporanEventPage() {
     );
   }
 
-  if (!reportData) {
+  if (!reportData || !reportData.event) {
     return (
       <div>
         <Navbar />
@@ -117,7 +133,7 @@ export default function LaporanEventPage() {
           </div>
 
           {/* STATISTICS SUMMARY */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-blue-50 p-4 rounded-lg">
               <h3 className="font-semibold text-blue-800">Total Tiket Terjual</h3>
               <p className="text-2xl font-bold text-blue-600">{reportData.total_tickets_sold}</p>
@@ -129,6 +145,12 @@ export default function LaporanEventPage() {
             <div className="bg-purple-50 p-4 rounded-lg">
               <h3 className="font-semibold text-purple-800">Total Pendapatan</h3>
               <p className="text-2xl font-bold text-purple-600">{formatRupiah(reportData.total_income)}</p>
+            </div>
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-orange-800">Tingkat Kehadiran</h3>
+              <p className="text-2xl font-bold text-orange-600">
+                {metrics?.attendance_rate || "0%"}
+              </p>
             </div>
           </div>
 
@@ -142,7 +164,7 @@ export default function LaporanEventPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={reportData.purchase_data}
+                      data={reportData.purchase_data || []}
                       dataKey="value"
                       nameKey="name"
                       innerRadius={60}
@@ -150,7 +172,7 @@ export default function LaporanEventPage() {
                       paddingAngle={4}
                       label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
                     >
-                      {reportData.purchase_data.map((_, index) => (
+                      {(reportData.purchase_data || []).map((_, index) => (
                         <Cell key={index} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -160,7 +182,7 @@ export default function LaporanEventPage() {
 
               {/* Legend Categories */}
               <div className="flex gap-4 mt-4 flex-wrap justify-center">
-                {reportData.purchase_data.map((item, i) => (
+                {(reportData.purchase_data || []).map((item, i) => (
                   <div
                     key={i}
                     className="px-4 py-2 bg-gray-100 rounded-lg shadow text-sm flex items-center"
@@ -186,7 +208,7 @@ export default function LaporanEventPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={reportData.checkin_data}
+                      data={reportData.checkin_data || []}
                       dataKey="value"
                       nameKey="name"
                       innerRadius={60}
@@ -194,7 +216,7 @@ export default function LaporanEventPage() {
                       paddingAngle={4}
                       label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
                     >
-                      {reportData.checkin_data.map((_, index) => (
+                      {(reportData.checkin_data || []).map((_, index) => (
                         <Cell key={index} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -203,7 +225,7 @@ export default function LaporanEventPage() {
               </div>
 
               <div className="flex gap-4 mt-4 flex-wrap justify-center">
-                {reportData.checkin_data.map((item, i) => (
+                {(reportData.checkin_data || []).map((item, i) => (
                   <div
                     key={i}
                     className="px-4 py-2 bg-gray-100 rounded-lg shadow text-sm flex items-center"
@@ -218,6 +240,24 @@ export default function LaporanEventPage() {
               </div>
             </div>
           </div>
+
+          {/* METRICS TAMBAHAN */}
+          {metrics && (
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-800">Persentase Tiket Terjual</h3>
+                <p className="text-xl font-bold text-gray-700">
+                  {metrics.sold_percentage || "0%"}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-gray-800">Total Attendant</h3>
+                <p className="text-xl font-bold text-gray-700">
+                  {metrics.total_attendant || 0}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* TOTAL PENDAPATAN */}
           <div className="mb-8">
