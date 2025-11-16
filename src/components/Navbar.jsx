@@ -95,6 +95,19 @@ export default function Navbar() {
     navigate("/lihat-profil");
   };
 
+  // Search handler
+const handleSearchSubmit = (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const searchQuery = formData.get('search');
+  
+  if (searchQuery && searchQuery.trim() !== '') {
+    navigate(`/cariEvent/${encodeURIComponent(searchQuery.trim())}`);
+    // Clear form setelah submit
+    e.target.reset();
+  }
+};
+
   const getRoleDisplayName = (role) => {
     switch (role) {
       case "user":
@@ -123,7 +136,7 @@ export default function Navbar() {
             <div className="bg-[#0C8CE9] text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-3 max-w-sm">
               <span>ⓘ</span>
               <span className="text-base">{notificationMessage}</span>
-              <button 
+              <button
                 onClick={() => setShowAccessNotification(false)}
                 className="text-white hover:text-amber-200 ml-2 shrink-0"
               >
@@ -159,13 +172,17 @@ export default function Navbar() {
 
             {/* SEARCH BAR */}
             <div className="relative">
-              <form action="">
+              <form onSubmit={handleSearchSubmit}>
                 <input
                   type="text"
+                  name="search"
                   placeholder="Cari Event berdasarkan nama"
                   className="shrink hidden md:block md:w-80 lg:w-150 xl:190 rounded-lg px-4 py-2 mx-3 bg-white"
                 />
-                <button className="absolute hidden md:block inset-y-0 right-3 items-center px-4 text-white bg-[#0C8CE9] border-white border rounded-r-md hover:bg-amber-400 cursor-pointer focus:outline-none">
+                <button
+                  type="submit"
+                  className="absolute hidden md:block inset-y-0 right-3 items-center px-4 text-white bg-[#0C8CE9] border-white border rounded-r-md hover:bg-amber-400 cursor-pointer focus:outline-none"
+                >
                   <Search className="w-6 h-6" />
                 </button>
               </form>
@@ -246,6 +263,18 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center bg-[#044888]">
             <NavLink
+              to="/"
+              state={{ scrollToPopular: true }}
+              className={({ isActive }) =>
+                isActive
+                  ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+                  : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
+              }
+            >
+              Beranda
+            </NavLink>
+
+            <NavLink
               to="/cariEvent"
               className={({ isActive }) =>
                 isActive
@@ -311,18 +340,6 @@ export default function Navbar() {
                 Verifikasi Event
               </NavLink>
             )}
-
-            <NavLink
-              to="/"
-              state={{ scrollToPopular: true }}
-              className={({ isActive }) =>
-                isActive
-                  ? "bg-[#0C8CE9] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
-                  : "bg-[#044888] text-lg hover:bg-[#0C8CE9] py-1.5 px-2 font-semibold text-white"
-              }
-            >
-              Event Populer
-            </NavLink>
           </div>
         </div>
       </nav>
@@ -333,13 +350,17 @@ export default function Navbar() {
           <div className="items-center h-18 bg-[#0C8CE9]">
             {/* SearchBar (Mobile ONLY) */}
             <div className="relative">
-              <form action="">
+              <form onSubmit={handleSearchSubmit}>
                 <input
                   type="text"
+                  name="search"
                   placeholder="Cari Event berdasarkan nama"
                   className="shrink w-full rounded-lg px-4 py-2 my-3 bg-white"
                 />
-                <button className="absolute inset-y-0 right-0 items-center px-4 my-3 text-white bg-[#0C8CE9] border-white border rounded-r-md hover:bg-amber-400 cursor-pointer focus:outline-none">
+                <button
+                  type="submit"
+                  className="absolute inset-y-0 right-0 items-center px-4 my-3 text-white bg-[#0C8CE9] border-white border rounded-r-md hover:bg-amber-400 cursor-pointer focus:outline-none"
+                >
                   <Search className="w-6 h-6" />
                 </button>
               </form>

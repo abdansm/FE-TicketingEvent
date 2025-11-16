@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import Navbar from "../components/Navbar";
 import api from "../services/api";
 
 export default function CariEvent() {
   const navigate = useNavigate();
+  const { namaEvent } = useParams();
   
-  // Fungsi helper: ubah angka ke format Rupiah
   const formatRupiah = (angka) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -15,7 +15,6 @@ export default function CariEvent() {
     }).format(angka);
   };
 
-  // Format tanggal dari backend
   const formatDate = (dateStart, dateEnd) => {
     const start = new Date(dateStart);
     const end = new Date(dateEnd);
@@ -38,24 +37,33 @@ export default function CariEvent() {
   
   // State untuk filter
   const [filters, setFilters] = useState({
-    keyword: "",
+    keyword: namaEvent || "",
     date: "",
     category: "",
     city: ""
   });
 
-  // Load data dari backend
+  // State untuk sorting
+  const [sortBy, setSortBy] = useState("popularitas");
+
+  // Load data dari backend - UPDATE INI
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
         const response = await api.get('/api/events');
-        const eventsData = response.data;
+        let eventsData = response.data;
+        
+        // URUTKAN DATA SAAT DITERIMA DARI API BERDASARKAN POPULARITAS
+        eventsData = eventsData.sort((eventA, eventB) => {
+          const salesA = eventA.total_tickets_sold || 0;
+          const salesB = eventB.total_tickets_sold || 0;
+          return salesB - salesA; // Descending: terbesar ke terkecil
+        });
         
         setEvents(eventsData);
-        setFilteredEvents(eventsData);
+        setFilteredEvents(eventsData); // Set filteredEvents juga dengan data terurut
         
-        // Extract unique cities dan categories
         const uniqueCities = [...new Set(eventsData.map(event => event.city).filter(Boolean))];
         const uniqueCategories = [...new Set(eventsData.map(event => event.category).filter(Boolean))];
         
@@ -72,9 +80,16 @@ export default function CariEvent() {
     fetchEvents();
   }, []);
 
-  // Apply filters
+  // Apply filters DAN sorting - UPDATE INI
   useEffect(() => {
-    let result = events;
+    let result = [...events]; // Buat copy array
+
+    if (namaEvent && namaEvent !== filters.keyword) {
+      setFilters(prev => ({
+        ...prev,
+        keyword: namaEvent
+      }));
+    }
 
     if (filters.keyword) {
       result = result.filter(event => 
@@ -99,8 +114,19 @@ export default function CariEvent() {
       result = result.filter(event => event.city === filters.city);
     }
 
+    // APPLY SORTING - PERBAIKAN INI
+    if (sortBy === "popularitas") {
+      result = result.sort((eventA, eventB) => {
+        const salesA = eventA.total_tickets_sold || 0;
+        const salesB = eventB.total_tickets_sold || 0;
+        return salesB - salesA; // Descending
+      });
+    } else if (sortBy === "abjad") {
+      result = result.sort((eventA, eventB) => eventA.name.localeCompare(eventB.name));
+    }
+
     setFilteredEvents(result);
-  }, [filters, events]);
+  }, [filters, events, namaEvent, sortBy]);
 
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({
@@ -109,12 +135,16 @@ export default function CariEvent() {
     }));
   };
 
+  // Handler untuk sorting
+  const handleSortChange = (value) => {
+    setSortBy(value);
+  };
+
   const handleCardClick = (id) => {
     navigate(`/detailEvent/${id}`);
   };
 
   const handleApplyFilters = () => {
-    // Filters sudah diterapkan secara real-time melalui useEffect
     console.log("Filters applied:", filters);
   };
 
@@ -184,6 +214,19 @@ export default function CariEvent() {
                   </select>
                 </div>
 
+                {/* FILTER URUTKAN BERDASARKAN */}
+                <div>
+                  <label className="block mb-1">Urutkan Berdasarkan :</label>
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                    className="w-full border border-gray-400 rounded px-2 py-1"
+                  >
+                    <option value="popularitas">Popularitas</option>
+                    <option value="abjad">Abjad</option>
+                  </select>
+                </div>
+
                 <button 
                   onClick={handleApplyFilters}
                   className="bg-gray-700 text-white py-1.5 rounded hover:bg-gray-800"
@@ -201,12 +244,16 @@ export default function CariEvent() {
                 </div>
               ) : filteredEvents.length === 0 ? (
                 <div className="flex justify-center items-center py-20">
-                  <div className="text-lg text-gray-500">Tidak ada event yang ditemukan</div>
+                  <div className="text-lg text-gray-500">
+                    {filters.keyword 
+                      ? `Tidak ada event ditemukan untuk "${filters.keyword}"` 
+                      : "Tidak ada event yang ditemukan"
+                    }
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-30">
                   {filteredEvents.map((event) => {
-                    // Cari harga termurah dari ticket categories
                     const minPrice = event.ticket_categories && event.ticket_categories.length > 0
                       ? Math.min(...event.ticket_categories.map(tc => tc.price))
                       : 0;
@@ -217,7 +264,6 @@ export default function CariEvent() {
                         onClick={() => handleCardClick(event.event_id)}
                         className="bg-white border rounded-md shadow-sm overflow-hidden cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
                       >
-                        {/* Kontainer gambar persegi (rasio 1:1) */}
                         <div className="relative w-full pb-[100%] bg-gray-300">
                           <img
                             src={event.image || "https://cdn2.steamgriddb.com/icon_thumb/63872edc3fa52d645b3d48f6d98caf2c.png"}
@@ -229,7 +275,6 @@ export default function CariEvent() {
                           />
                         </div>
 
-                        {/* Informasi event */}
                         <div className="p-2 text-sm">
                           <p className="font-semibold text-base truncate whitespace-nowrap overflow-hidden">
                             {event.name}
