@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { userAPI } from "../services/api";
+import useNotification from "../hooks/useNotification"; // Sesuaikan path
 
 export default function EditProfileModal({ user, onClose, onUpdate }) {
   const [formData, setFormData] = useState({
@@ -17,10 +18,12 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
     ktp: user.ktp || ''
   });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
   
   const profilePictRef = useRef(null);
   const ktpRef = useRef(null);
+
+  // Gunakan hook useNotification
+  const { showNotification } = useNotification();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -71,7 +74,6 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
 
     try {
       const submitData = new FormData();
@@ -103,7 +105,9 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
 
       const response = await userAPI.updateProfile(submitData);
       onUpdate(response.data.user);
-      setMessage('Profil berhasil diperbarui');
+      
+      // Show success notification
+      showNotification('Profil berhasil diperbarui!', 'Update Berhasil', 'success');
       
       // Clear preview URLs
       Object.values(previewImages).forEach(url => {
@@ -116,7 +120,7 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
       setFormData(prev => ({ ...prev, password: '' }));
     } catch (error) {
       console.error('Error updating profile:', error);
-      setMessage('Gagal memperbarui profil');
+      showNotification('Gagal memperbarui profil', 'Update Gagal', 'error');
     } finally {
       setLoading(false);
     }
@@ -283,57 +287,9 @@ export default function EditProfileModal({ user, onClose, onUpdate }) {
                         className="w-full text-sm p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
-
-                    {/* KTP Upload */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Upload KTP
-                      </label>
-                      
-                      {/* KTP Preview */}
-                      {(previewImages.ktp || user.ktp) && (
-                        <div className="mb-3">
-                          <p className="text-xs text-gray-600 mb-2">Preview KTP:</p>
-                          <div className="relative inline-block">
-                            <img
-                              src={previewImages.ktp || user.ktp}
-                              alt="KTP preview"
-                              className="w-32 h-20 object-cover border-2 border-gray-300 rounded"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => clearFile('ktp')}
-                              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <input
-                        ref={ktpRef}
-                        type="file"
-                        name="ktp"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="w-full text-sm p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah</p>
-                    </div>
                   </div>
                 </div>
               </>
-            )}
-
-            {message && (
-              <div className={`p-2 rounded text-sm ${
-                message.includes('berhasil') 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-red-100 text-red-700'
-              }`}>
-                {message}
-              </div>
             )}
 
             <div className="flex space-x-2 pt-3">
