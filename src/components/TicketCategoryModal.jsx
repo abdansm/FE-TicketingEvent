@@ -128,7 +128,12 @@ export default function TicketCategoryModal({
               <input 
                 type="number" 
                 name="quota"
-                className="w-full border rounded-lg p-2" 
+                className="w-full border rounded-lg p-2
+             [&::-webkit-outer-spin-button]:bg-white
+             [&::-webkit-outer-spin-button]:rounded-r-md
+             [&::-webkit-inner-spin-button]:bg-black 
+             [&::-webkit-inner-spin-button]:rounded-r-md
+             [&::-webkit-inner-spin-button]:mr-1" 
                 placeholder="0"
                 min="1"
                 value={formData.quota}
@@ -140,16 +145,21 @@ export default function TicketCategoryModal({
             <div>
               <p className="font-medium mb-1">Harga tiket *</p>
               <input 
-                type="number" 
-                name="price"
-                className="w-full border rounded-lg p-2" 
-                placeholder="0"
-                min="0"
-                step="1000"
-                value={formData.price}
-                onChange={handleInputChange}
-                required
-              />
+  type="number" 
+  name="price"
+  className="w-full border rounded-lg p-2
+             [&::-webkit-outer-spin-button]:bg-white
+             [&::-webkit-outer-spin-button]:rounded-r-md
+             [&::-webkit-inner-spin-button]:bg-black 
+             [&::-webkit-inner-spin-button]:rounded-r-md
+             [&::-webkit-inner-spin-button]:mr-1" 
+  placeholder="0"
+  min="0"
+  step="1000"
+  value={formData.price}
+  onChange={handleInputChange}
+  required
+/>
             </div>
           </div>
 
@@ -158,7 +168,7 @@ export default function TicketCategoryModal({
             <div>
               <p className="font-medium mb-1">Tanggal mulai *</p>
               <label className="flex items-center gap-2 border rounded-lg p-2">
-                <Calendar size={18} />
+                <Calendar size={18} color="#0C8CE9" />
                 <input 
                   type="date" 
                   name="date_start"
@@ -173,7 +183,7 @@ export default function TicketCategoryModal({
             <div>
               <p className="font-medium mb-1">Tanggal selesai *</p>
               <label className="flex items-center gap-2 border rounded-lg p-2">
-                <Calendar size={18} />
+                <Calendar size={18} color="#0C8CE9"/>
                 <input 
                   type="date" 
                   name="date_end"
@@ -204,13 +214,13 @@ export default function TicketCategoryModal({
             <button
               type="button"
               onClick={handleCancel}
-              className="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 text-lg font-semibold"
+              className="flex-1 bg-red-500 text-white py-3 rounded-lg hover:bg-red-400 text-lg font-semibold"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="flex-1 bg-black text-white py-3 rounded-lg hover:bg-gray-800 text-lg font-semibold"
+              className="flex-1 bg-[#044888] text-white py-3 rounded-lg hover:bg-[#0C8CE9] text-lg font-semibold"
             >
               {editingTicket ? "Update Kategori Tiket" : "Tambah Kategori Tiket"}
             </button>

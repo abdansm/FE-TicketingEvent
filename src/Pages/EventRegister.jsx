@@ -377,7 +377,7 @@ export default function EventRegister() {
                   Pilih poster event : (1x1)
                 </p>
                 <label className="flex items-center gap-2 border rounded-lg p-2 cursor-pointer">
-                  <Folder />
+                  <Folder color="#0C8CE9"/>
                   <input
                     type="file"
                     className="hidden"
@@ -394,7 +394,7 @@ export default function EventRegister() {
                   Pilih banner event : (16x6)
                 </p>
                 <label className="flex items-center gap-2 border rounded-lg p-2 cursor-pointer">
-                  <Folder />
+                  <Folder color="#0C8CE9"/>
                   <input
                     type="file"
                     className="hidden"
@@ -409,7 +409,7 @@ export default function EventRegister() {
               <div>
                 <p className="font-medium mb-1">Tanggal event :</p>
                 <label className="flex items-center gap-2 border rounded-lg p-2">
-                  <Calendar />
+                  <Calendar color="#0C8CE9"/>
                   <input
                     type="date"
                     name="date_start"
@@ -425,7 +425,7 @@ export default function EventRegister() {
               <div>
                 <p className="font-medium mb-1">Tanggal event berakhir :</p>
                 <label className="flex items-center gap-2 border rounded-lg p-2">
-                  <Calendar />
+                  <Calendar color="#0C8CE9"/>
                   <input
                     type="date"
                     name="date_end"
@@ -484,7 +484,7 @@ export default function EventRegister() {
             <button
               type="button"
               onClick={handleAddTicketClick}
-              className="mt-6 flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              className="mt-6 flex items-center gap-2 bg-[#044888] text-white px-4 py-2 rounded-lg hover:bg-[#0C8CE9]"
             >
               <Plus />
               Tambah Kategori Tiket
@@ -534,7 +534,7 @@ export default function EventRegister() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-8 w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 text-lg font-semibold disabled:bg-gray-400"
+              className="mt-8 w-full bg-[#044888] text-white py-3 rounded-lg hover:bg-[#0C8CE9] text-lg font-semibold disabled:bg-gray-400"
             >
               {loading ? "Membuat Event..." : "Daftarkan Event"}
             </button>
