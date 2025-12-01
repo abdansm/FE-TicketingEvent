@@ -24,20 +24,22 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import useNotification from "../hooks/useNotification";
-import NotificationModal from "./NotificationModal"; 
+import NotificationModal from "./NotificationModal";
 
 export default function Navbar() {
   const [mobileMenuIsOpen, setMobileMenuIsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [verificationDropdownOpen, setVerificationDropdownOpen] = useState(false);
+  const [verificationDropdownOpen, setVerificationDropdownOpen] =
+    useState(false);
   const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef(null);
   const verificationRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  
-  const { notification, showNotification, hideNotification } = useNotification();
+
+  const { notification, showNotification, hideNotification } =
+    useNotification();
 
   useEffect(() => {
     const userData = sessionStorage.getItem("user");
@@ -53,14 +55,17 @@ export default function Navbar() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setProfileDropdownOpen(false);
       }
-      if (verificationRef.current && !verificationRef.current.contains(event.target)) {
+      if (
+        verificationRef.current &&
+        !verificationRef.current.contains(event.target)
+      ) {
         setVerificationDropdownOpen(false);
       }
     };
 
     window.addEventListener("scroll", handleScroll);
     document.addEventListener("mousedown", handleClickOutside);
-    
+
     return () => {
       window.removeEventListener("scroll", handleScroll);
       document.removeEventListener("mousedown", handleClickOutside);
@@ -80,7 +85,11 @@ export default function Navbar() {
     sessionStorage.removeItem("user");
     setUser(null);
     setProfileDropdownOpen(false);
-    showNotification("Anda telah berhasil logout", "Logout Berhasil", "success");
+    showNotification(
+      "Anda telah berhasil logout",
+      "Logout Berhasil",
+      "success"
+    );
     navigate("/");
   };
 
@@ -94,14 +103,22 @@ export default function Navbar() {
 
   const handleShoppingCartClick = () => {
     if (!isLoggedIn()) {
-      showNotification("Harap login terlebih dahulu", "Akses Ditolak", "warning");
+      showNotification(
+        "Harap login terlebih dahulu",
+        "Akses Ditolak",
+        "warning"
+      );
       return;
     }
 
     if (getUserRole() === "user") {
       navigate("/keranjang");
     } else {
-      showNotification("Fitur ini hanya tersedia untuk User", "Akses Ditolak", "warning");
+      showNotification(
+        "Fitur ini hanya tersedia untuk User",
+        "Akses Ditolak",
+        "warning"
+      );
     }
   };
 
@@ -263,25 +280,32 @@ export default function Navbar() {
 
   // Fungsi untuk menangani status aktif pada NavLink
   const getNavLinkClass = (isActive, additionalClasses = "") => {
-    const baseClasses = "flex items-center space-x-2 px-6 py-3 rounded-t-lg font-medium transition-all relative group";
+    const baseClasses =
+      "flex items-center space-x-2 px-6 py-3 rounded-t-lg font-medium transition-all relative group";
     const activeClasses = "bg-white text-blue-600 shadow-lg";
     const inactiveClasses = "text-white hover:bg-white/20 hover:shadow-lg";
-    
-    return `${baseClasses} ${isActive ? activeClasses : inactiveClasses} ${additionalClasses}`;
+
+    return `${baseClasses} ${
+      isActive ? activeClasses : inactiveClasses
+    } ${additionalClasses}`;
   };
 
   // Fungsi untuk menangani status aktif pada Verification dropdown
   const getVerificationNavClass = (isActive) => {
-    const baseClasses = "flex items-center space-x-2 px-6 py-3 rounded-t-lg font-medium transition-all relative group";
+    const baseClasses =
+      "flex items-center space-x-2 px-6 py-3 rounded-t-lg font-medium transition-all relative group";
     const activeClasses = "bg-white text-blue-600 shadow-lg";
     const inactiveClasses = "text-white hover:bg-white/20 hover:shadow-lg";
-    
+
     return `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
   };
 
   // Check if verification related pages are active
   const isVerificationActive = () => {
-    return location.pathname === "/verifikasiUser" || location.pathname === "/verifikasi-event";
+    return (
+      location.pathname === "/verifikasiUser" ||
+      location.pathname === "/verifikasi-event"
+    );
   };
 
   const isReportActive = () => {
@@ -299,9 +323,11 @@ export default function Navbar() {
       />
 
       {/* NAVBAR TOP */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-[#0C8CE9] shadow-lg' : 'bg-[#0C8CE9]'
-      }`}>
+      <nav
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+          scrolled ? "bg-[#0C8CE9] shadow-lg" : "bg-[#0C8CE9]"
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-18 md:h-20">
             {/* LEFT SIDE - Logo & Mobile Menu */}
@@ -313,7 +339,7 @@ export default function Navbar() {
               >
                 <Menu className="w-7 h-7" />
               </button>
-              
+
               {/* Logo */}
               <Link to="/" className="flex items-center space-x-2">
                 <div className="bg-white rounded-lg p-1 shadow-md">
@@ -351,23 +377,53 @@ export default function Navbar() {
                   <ShoppingCart className="w-6 h-6" />
                 </button>
               )}
-              
+
               {isLoggedIn() ? (
                 <div className="relative" ref={dropdownRef}>
+                  {/* Desktop Profile Button */}
                   <button
-                    className="flex items-center space-x-3 text-white hover:text-amber-400 transition-colors p-2"
+                    className="md:flex items-center space-x-3 text-white hover:text-amber-400 transition-colors p-2"
                     onClick={handleProfileClick}
                   >
                     {renderUserAvatar()}
-                    <div className="hidden lg:flex flex-col items-start">
+                    <div className="lg:flex flex-col items-start">
                       <span className="text-sm font-bold">
                         {user?.username}
                       </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full border flex items-center space-x-1 mt-1 ${getRoleColor(user?.role)}`}>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full border flex items-center space-x-1 mt-1 ${getRoleColor(
+                          user?.role
+                        )}`}
+                      >
                         {getRoleIcon(user?.role)}
-                        <span className="font-semibold">{getRoleDisplayName(user?.role)}</span>
+                        <span className="font-semibold">
+                          {getRoleDisplayName(user?.role)}
+                        </span>
                       </span>
                     </div>
+                  </button>
+
+                  {/* Mobile Profile Button dengan User Info */}
+                  <button
+                    className="md:hidden flex items-center space-x-2 text-white hover:text-amber-400 transition-colors p-1"
+                    onClick={handleProfileClick}
+                  >
+                    <div className="flex flex-col items-end">
+                      <span className="text-sm font-bold text-white truncate max-w-[80px]">
+                        {user?.username}
+                      </span>
+                      <span
+                        className={`text-xs px-1.5 py-0.5 rounded-full border flex items-center space-x-0.5 ${getRoleColor(
+                          user?.role
+                        )}`}
+                      >
+                        {getRoleIcon(user?.role)}
+                        <span className="font-semibold">
+                          {getRoleDisplayName(user?.role)}
+                        </span>
+                      </span>
+                    </div>
+                    {renderUserAvatar()}
                   </button>
 
                   {/* Profile Dropdown */}
@@ -401,9 +457,15 @@ export default function Navbar() {
                             <p className="text-lg font-bold text-gray-900 truncate">
                               {user.username}
                             </p>
-                            <p className={`text-sm px-3 py-1 rounded-full border flex items-center space-x-1 mt-1 w-fit ${getRoleColor(user.role)}`}>
+                            <p
+                              className={`text-sm px-3 py-1 rounded-full border flex items-center space-x-1 mt-1 w-fit ${getRoleColor(
+                                user.role
+                              )}`}
+                            >
                               {getRoleIcon(user.role)}
-                              <span className="font-bold">{getRoleDisplayName(user.role)}</span>
+                              <span className="font-bold">
+                                {getRoleDisplayName(user.role)}
+                              </span>
                             </p>
                           </div>
                         </div>
@@ -418,9 +480,11 @@ export default function Navbar() {
                           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                             <User className="w-4 h-4 text-blue-600" />
                           </div>
-                          <span className="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">Lihat Profil</span>
+                          <span className="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
+                            Lihat Profil
+                          </span>
                         </button>
-                        
+
                         {/* Event yang Disukai - Only for User role */}
                         {isLoggedIn() && getUserRole() === "user" && (
                           <button
@@ -430,10 +494,12 @@ export default function Navbar() {
                             <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center group-hover:bg-pink-200 transition-colors">
                               <Heart className="w-4 h-4 text-pink-600" />
                             </div>
-                            <span className="font-medium text-gray-700 group-hover:text-pink-600 transition-colors">Event yang Disukai</span>
+                            <span className="font-medium text-gray-700 group-hover:text-pink-600 transition-colors">
+                              Event yang Disukai
+                            </span>
                           </button>
                         )}
-                        
+
                         {/* Transaction History - Only for User role */}
                         {getUserRole() === "user" && (
                           <button
@@ -443,12 +509,15 @@ export default function Navbar() {
                             <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
                               <History className="w-4 h-4 text-green-600" />
                             </div>
-                            <span className="font-medium text-gray-700 group-hover:text-green-600 transition-colors">Riwayat Transaksi</span>
+                            <span className="font-medium text-gray-700 group-hover:text-green-600 transition-colors">
+                              Riwayat Transaksi
+                            </span>
                           </button>
                         )}
 
                         {/* Laporan Masalah - Hanya untuk user dan organizer (admin sudah dipindah ke bottom navbar) */}
-                        {(getUserRole() === "user" || getUserRole() === "organizer") && (
+                        {(getUserRole() === "user" ||
+                          getUserRole() === "organizer") && (
                           <button
                             onClick={handleViewReportIssue}
                             className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-yellow-50 rounded-lg transition-colors group"
@@ -456,10 +525,12 @@ export default function Navbar() {
                             <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
                               <Flag className="w-4 h-4 text-yellow-600" />
                             </div>
-                            <span className="font-medium text-gray-700 group-hover:text-yellow-600 transition-colors">Laporkan Masalah</span>
+                            <span className="font-medium text-gray-700 group-hover:text-yellow-600 transition-colors">
+                              Laporkan Masalah
+                            </span>
                           </button>
                         )}
-                        
+
                         <div className="border-t border-gray-200 mt-2 pt-2">
                           <button
                             onClick={handleLogout}
@@ -468,7 +539,9 @@ export default function Navbar() {
                             <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
                               <LogOut className="w-4 h-4 text-red-600" />
                             </div>
-                            <span className="font-medium text-red-600 group-hover:text-red-700 transition-colors">Keluar</span>
+                            <span className="font-medium text-red-600 group-hover:text-red-700 transition-colors">
+                              Keluar
+                            </span>
                           </button>
                         </div>
                       </div>
@@ -500,9 +573,13 @@ export default function Navbar() {
                 <Home size={16} />
                 <span>Beranda</span>
                 {/* Hover effect */}
-                <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
-                  location.pathname === "/" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                }`} />
+                <div
+                  className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
+                    location.pathname === "/"
+                      ? "scale-x-100"
+                      : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+                />
               </NavLink>
 
               <NavLink
@@ -512,9 +589,13 @@ export default function Navbar() {
                 <Search size={16} />
                 <span>Cari Event</span>
                 {/* Hover effect */}
-                <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
-                  location.pathname.startsWith("/cariEvent") ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                }`} />
+                <div
+                  className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
+                    location.pathname.startsWith("/cariEvent")
+                      ? "scale-x-100"
+                      : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+                />
               </NavLink>
 
               {/* Kalender Event - Accessible by all users */}
@@ -525,9 +606,13 @@ export default function Navbar() {
                 <CalendarDays size={16} />
                 <span>Kalender Event</span>
                 {/* Hover effect */}
-                <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
-                  location.pathname === "/kalender-event" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                }`} />
+                <div
+                  className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
+                    location.pathname === "/kalender-event"
+                      ? "scale-x-100"
+                      : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+                />
               </NavLink>
 
               {/* Menu untuk User */}
@@ -539,9 +624,13 @@ export default function Navbar() {
                   <Ticket size={16} />
                   <span>Tiket Saya</span>
                   {/* Hover effect */}
-                  <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
-                    location.pathname === "/tiket-saya" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                  }`} />
+                  <div
+                    className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
+                      location.pathname === "/tiket-saya"
+                        ? "scale-x-100"
+                        : "scale-x-0 group-hover:scale-x-100"
+                    }`}
+                  />
                 </NavLink>
               )}
 
@@ -555,9 +644,13 @@ export default function Navbar() {
                     <Calendar size={16} />
                     <span>Buat Event</span>
                     {/* Hover effect */}
-                    <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
-                      location.pathname === "/daftar-event" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                    }`} />
+                    <div
+                      className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
+                        location.pathname === "/daftar-event"
+                          ? "scale-x-100"
+                          : "scale-x-0 group-hover:scale-x-100"
+                      }`}
+                    />
                   </NavLink>
                   <NavLink
                     to="/event-saya"
@@ -566,9 +659,13 @@ export default function Navbar() {
                     <Calendar size={16} />
                     <span>Event Saya</span>
                     {/* Hover effect */}
-                    <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
-                      location.pathname === "/event-saya" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                    }`} />
+                    <div
+                      className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
+                        location.pathname === "/event-saya"
+                          ? "scale-x-100"
+                          : "scale-x-0 group-hover:scale-x-100"
+                      }`}
+                    />
                   </NavLink>
                 </>
               )}
@@ -583,9 +680,13 @@ export default function Navbar() {
                     <Settings size={16} />
                     <span>Konfigurasi Event</span>
                     {/* Hover effect */}
-                    <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
-                      location.pathname === "/atur-event" ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                    }`} />
+                    <div
+                      className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
+                        location.pathname === "/atur-event"
+                          ? "scale-x-100"
+                          : "scale-x-0 group-hover:scale-x-100"
+                      }`}
+                    />
                   </NavLink>
 
                   <NavLink
@@ -595,24 +696,39 @@ export default function Navbar() {
                     <FileText size={16} />
                     <span>Laporan Masalah</span>
                     {/* Hover effect */}
-                    <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
-                      isReportActive() ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                    }`} />
+                    <div
+                      className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
+                        isReportActive()
+                          ? "scale-x-100"
+                          : "scale-x-0 group-hover:scale-x-100"
+                      }`}
+                    />
                   </NavLink>
 
                   {/* Verifikasi Dropdown */}
                   <div className="relative" ref={verificationRef}>
                     <button
-                      className={getVerificationNavClass(isVerificationActive())}
+                      className={getVerificationNavClass(
+                        isVerificationActive()
+                      )}
                       onClick={handleVerificationClick}
                     >
                       <ShieldCheck size={16} />
                       <span>Verifikasi</span>
-                      <ChevronDown size={14} className={`transition-transform ${verificationDropdownOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown
+                        size={14}
+                        className={`transition-transform ${
+                          verificationDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
                       {/* Hover effect */}
-                      <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
-                        isVerificationActive() ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                      }`} />
+                      <div
+                        className={`absolute bottom-0 left-0 w-full h-0.5 bg-amber-400 transform origin-left transition-transform ${
+                          isVerificationActive()
+                            ? "scale-x-100"
+                            : "scale-x-0 group-hover:scale-x-100"
+                        }`}
+                      />
                     </button>
 
                     {/* Verification Dropdown Menu */}
@@ -621,37 +737,55 @@ export default function Navbar() {
                         <button
                           onClick={handleVerificationUser}
                           className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-blue-50 transition-colors group ${
-                            location.pathname === "/verifikasiUser" ? "bg-blue-50 text-blue-600" : "text-gray-700"
+                            location.pathname === "/verifikasiUser"
+                              ? "bg-blue-50 text-blue-600"
+                              : "text-gray-700"
                           }`}
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            location.pathname === "/verifikasiUser" ? "bg-blue-100" : "bg-gray-100 group-hover:bg-blue-100"
-                          } transition-colors`}>
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              location.pathname === "/verifikasiUser"
+                                ? "bg-blue-100"
+                                : "bg-gray-100 group-hover:bg-blue-100"
+                            } transition-colors`}
+                          >
                             <Users className="w-4 h-4" />
                           </div>
                           <div className="flex-1">
                             <span className="font-medium">Verifikasi User</span>
-                            <p className="text-xs text-gray-500">Verifikasi akun organizer</p>
+                            <p className="text-xs text-gray-500">
+                              Verifikasi akun organizer
+                            </p>
                           </div>
                           {location.pathname === "/verifikasiUser" && (
                             <CheckCircle className="w-4 h-4 text-green-500" />
                           )}
                         </button>
-                        
+
                         <button
                           onClick={handleVerificationEvent}
                           className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-blue-50 transition-colors group ${
-                            location.pathname === "/verifikasi-event" ? "bg-blue-50 text-blue-600" : "text-gray-700"
+                            location.pathname === "/verifikasi-event"
+                              ? "bg-blue-50 text-blue-600"
+                              : "text-gray-700"
                           }`}
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            location.pathname === "/verifikasi-event" ? "bg-blue-100" : "bg-gray-100 group-hover:bg-blue-100"
-                          } transition-colors`}>
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              location.pathname === "/verifikasi-event"
+                                ? "bg-blue-100"
+                                : "bg-gray-100 group-hover:bg-blue-100"
+                            } transition-colors`}
+                          >
                             <CheckCircle className="w-4 h-4" />
                           </div>
                           <div className="flex-1">
-                            <span className="font-medium">Verifikasi Event</span>
-                            <p className="text-xs text-gray-500">Verifikasi event baru</p>
+                            <span className="font-medium">
+                              Verifikasi Event
+                            </span>
+                            <p className="text-xs text-gray-500">
+                              Verifikasi event baru
+                            </p>
                           </div>
                           {location.pathname === "/verifikasi-event" && (
                             <CheckCircle className="w-4 h-4 text-green-500" />
@@ -711,16 +845,22 @@ export default function Navbar() {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            
+
             {/* User Info - Ditampilkan di mobile */}
             {isLoggedIn() ? (
               <div className="flex items-center space-x-3">
                 {renderMobileUserAvatar()}
                 <div>
                   <p className="font-bold text-lg">{user?.username}</p>
-                  <p className={`text-xs px-3 py-1 rounded-full border flex items-center space-x-1 mt-1 w-fit ${getRoleColor(user.role)}`}>
+                  <p
+                    className={`text-xs px-3 py-1 rounded-full border flex items-center space-x-1 mt-1 w-fit ${getRoleColor(
+                      user.role
+                    )}`}
+                  >
                     {getRoleIcon(user.role)}
-                    <span className="font-bold">{getRoleDisplayName(user.role)}</span>
+                    <span className="font-bold">
+                      {getRoleDisplayName(user.role)}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -728,7 +868,7 @@ export default function Navbar() {
               <div className="text-center py-4">
                 <p className="text-blue-100 mb-3">Belum login?</p>
                 <Link to="/login">
-                  <button 
+                  <button
                     className="bg-white text-blue-600 px-6 py-2 rounded-lg font-bold hover:bg-blue-50 transition-all"
                     onClick={() => setMobileMenuIsOpen(false)}
                   >
@@ -743,10 +883,10 @@ export default function Navbar() {
           <div className="p-4 space-y-1">
             <NavLink
               to="/"
-              className={({ isActive }) => 
+              className={({ isActive }) =>
                 `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                  isActive 
-                    ? "bg-blue-50 text-blue-600 font-bold" 
+                  isActive
+                    ? "bg-blue-50 text-blue-600 font-bold"
                     : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 }`
               }
@@ -758,10 +898,10 @@ export default function Navbar() {
 
             <NavLink
               to="/cariEvent"
-              className={({ isActive }) => 
+              className={({ isActive }) =>
                 `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                  isActive 
-                    ? "bg-blue-50 text-blue-600 font-bold" 
+                  isActive
+                    ? "bg-blue-50 text-blue-600 font-bold"
                     : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 }`
               }
@@ -774,10 +914,10 @@ export default function Navbar() {
             {/* Kalender Event - Accessible by all users (Mobile) */}
             <NavLink
               to="/kalender-event"
-              className={({ isActive }) => 
+              className={({ isActive }) =>
                 `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                  isActive 
-                    ? "bg-blue-50 text-blue-600 font-bold" 
+                  isActive
+                    ? "bg-blue-50 text-blue-600 font-bold"
                     : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 }`
               }
@@ -791,10 +931,10 @@ export default function Navbar() {
             {isLoggedIn() && getUserRole() === "user" && (
               <NavLink
                 to="/event-disukai"
-                className={({ isActive }) => 
+                className={({ isActive }) =>
                   `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                    isActive 
-                      ? "bg-pink-50 text-pink-600 font-bold" 
+                    isActive
+                      ? "bg-pink-50 text-pink-600 font-bold"
                       : "text-gray-700 hover:bg-pink-50 hover:text-pink-600"
                   }`
                 }
@@ -809,10 +949,10 @@ export default function Navbar() {
             {isLoggedIn() && getUserRole() === "user" && (
               <NavLink
                 to="/tiket-saya"
-                className={({ isActive }) => 
+                className={({ isActive }) =>
                   `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                    isActive 
-                      ? "bg-blue-50 text-blue-600 font-bold" 
+                    isActive
+                      ? "bg-blue-50 text-blue-600 font-bold"
                       : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                   }`
                 }
@@ -828,10 +968,10 @@ export default function Navbar() {
               <>
                 <NavLink
                   to="/daftar-event"
-                  className={({ isActive }) => 
+                  className={({ isActive }) =>
                     `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                      isActive 
-                        ? "bg-blue-50 text-blue-600 font-bold" 
+                      isActive
+                        ? "bg-blue-50 text-blue-600 font-bold"
                         : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                     }`
                   }
@@ -842,10 +982,10 @@ export default function Navbar() {
                 </NavLink>
                 <NavLink
                   to="/event-saya"
-                  className={({ isActive }) => 
+                  className={({ isActive }) =>
                     `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                      isActive 
-                        ? "bg-blue-50 text-blue-600 font-bold" 
+                      isActive
+                        ? "bg-blue-50 text-blue-600 font-bold"
                         : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                     }`
                   }
@@ -862,10 +1002,10 @@ export default function Navbar() {
               <>
                 <NavLink
                   to="/atur-event"
-                  className={({ isActive }) => 
+                  className={({ isActive }) =>
                     `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                      isActive 
-                        ? "bg-blue-50 text-blue-600 font-bold" 
+                      isActive
+                        ? "bg-blue-50 text-blue-600 font-bold"
                         : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                     }`
                   }
@@ -877,10 +1017,10 @@ export default function Navbar() {
 
                 <NavLink
                   to="/laporanMasalah"
-                  className={({ isActive }) => 
+                  className={({ isActive }) =>
                     `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                      isActive 
-                        ? "bg-blue-50 text-blue-600 font-bold" 
+                      isActive
+                        ? "bg-blue-50 text-blue-600 font-bold"
                         : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                     }`
                   }
@@ -897,10 +1037,10 @@ export default function Navbar() {
                   </div>
                   <NavLink
                     to="/verifikasiUser"
-                    className={({ isActive }) => 
+                    className={({ isActive }) =>
                       `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                        isActive 
-                          ? "bg-blue-50 text-blue-600 font-bold" 
+                        isActive
+                          ? "bg-blue-50 text-blue-600 font-bold"
                           : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                       }`
                     }
@@ -911,10 +1051,10 @@ export default function Navbar() {
                   </NavLink>
                   <NavLink
                     to="/verifikasi-event"
-                    className={({ isActive }) => 
+                    className={({ isActive }) =>
                       `flex items-center space-x-3 p-4 rounded-lg transition-all hover:scale-[1.02] ${
-                        isActive 
-                          ? "bg-blue-50 text-blue-600 font-bold" 
+                        isActive
+                          ? "bg-blue-50 text-blue-600 font-bold"
                           : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                       }`
                     }

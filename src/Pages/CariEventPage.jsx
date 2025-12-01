@@ -28,7 +28,7 @@ const CATEGORY_COLORS = {
   "Lainnya": "bg-gray-500"
 };
 
-const ITEMS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 10;
 
 export default function CariEvent() {
   const navigate = useNavigate();
