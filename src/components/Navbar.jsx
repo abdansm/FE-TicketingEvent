@@ -382,7 +382,7 @@ export default function Navbar() {
                 <div className="relative" ref={dropdownRef}>
                   {/* Desktop Profile Button */}
                   <button
-                    className="md:flex items-center space-x-3 text-white hover:text-amber-400 transition-colors p-2"
+                    className="hidden md:flex items-center space-x-3 text-white hover:text-amber-400 transition-colors p-2"
                     onClick={handleProfileClick}
                   >
                     {renderUserAvatar()}

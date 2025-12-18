@@ -22,6 +22,8 @@ import {
   ChevronDown,
   ChevronUp,
   LogIn,
+  PlayCircle,
+  Flag,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api, { eventAPI } from "../services/api";
@@ -96,26 +98,45 @@ function StatusBadge({ status }) {
         return <XCircle className="w-5 h-5 text-red-600" />;
       case "pending":
         return <Clock className="w-5 h-5 text-yellow-600" />;
+      case "active":
+        return <PlayCircle className="w-5 h-5 text-emerald-600" />;
+      case "ended":
+        return <Flag className="w-5 h-5 text-slate-600" />;
       default:
         return <Clock className="w-5 h-5 text-gray-600" />;
     }
   };
 
   const getStatusText = () => {
+    const statusMap = {
+      approved: "Disetujui",
+      rejected: "Ditolak",
+      pending: "Menunggu Verifikasi",
+      active: "Sedang Berlangsung",
+      ended: "Berakhir",
+    };
+    return statusMap[status] || status;
+  };
+
+  const getStatusColor = () => {
     switch (status) {
-      case "approved":
-        return "Disetujui";
-      case "rejected":
-        return "Ditolak";
       case "pending":
-        return "Menunggu Verifikasi";
+        return "bg-yellow-50 text-yellow-700 border border-yellow-200";
+      case "rejected":
+        return "bg-red-50 text-red-700 border border-red-200";
+      case "approved":
+        return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+      case "active":
+        return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+      case "ended":
+        return "bg-slate-100 text-slate-700 border border-slate-300";
       default:
-        return status;
+        return "bg-gray-100 text-gray-700 border border-gray-200";
     }
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${getStatusColor()}`}>
       {getStatusIcon()}
       <span className="font-semibold">{getStatusText()}</span>
     </div>
@@ -1091,7 +1112,7 @@ export default function EventDetail() {
   const showStatusInfo =
     isOwner || isAdmin || (isEO && event.status !== "approved");
 
-  const isEventEnded = event.status === "ended";
+  const isEventEnded = event.status === "ended" || event.status === "ended";
 
   return (
     <div className="min-h-screen py-8 mt-30">
@@ -1217,14 +1238,33 @@ export default function EventDetail() {
                       ? "bg-red-50 border border-red-200"
                       : event.status === "approved"
                       ? "bg-green-50 border border-green-200"
+                      : event.status === "active"
+                      ? "bg-emerald-50 border border-emerald-200"
+                      : event.status === "ended"
+                      ? "bg-slate-100 border border-slate-300"
                       : "bg-gray-50 border border-gray-200"
                   }`}
                 >
                   <StatusBadge status={event.status} />
                   <div className="flex-1">
-                    {event.approval_comment && (
+                    {event.approval_comment && event.status === "rejected" && (
                       <p className="text-gray-600 text-sm sm:text-base">
-                        Komentar: {event.approval_comment}
+                        <span className="font-medium">Alasan penolakan:</span> {event.approval_comment}
+                      </p>
+                    )}
+                    {event.approval_comment && event.status === "approved" && (
+                      <p className="text-gray-600 text-sm sm:text-base">
+                        <span className="font-medium">Komentar persetujuan:</span> {event.approval_comment}
+                      </p>
+                    )}
+                    {event.status === "active" && (
+                      <p className="text-emerald-600 text-sm sm:text-base font-medium">
+                        Event ini sedang berlangsung
+                      </p>
+                    )}
+                    {event.status === "ended" && (
+                      <p className="text-slate-600 text-sm sm:text-base font-medium">
+                        Event ini sudah berakhir
                       </p>
                     )}
                   </div>

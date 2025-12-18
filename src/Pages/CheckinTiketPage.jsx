@@ -7,7 +7,6 @@ import { ticketAPI, eventAPI } from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import {
-  QrCode,
   CheckCircle2,
   XCircle,
   RefreshCw,
@@ -27,7 +26,10 @@ import {
   Shield,
   TicketCheck,
   Users,
-  Info
+  Info,
+  CalendarX,
+  CalendarClock,
+  TimerOff
 } from "lucide-react";
 
 export default function CheckinTiketPage() {
@@ -46,6 +48,7 @@ export default function CheckinTiketPage() {
   const [scanCount, setScanCount] = useState(0);
   const [user, setUser] = useState(null);
   const [showResult, setShowResult] = useState(false);
+  const [usedAtTime, setUsedAtTime] = useState(null);
   
   const scannerRef = useRef(null);
   const { notification, showNotification, hideNotification } = useNotification();
@@ -146,6 +149,40 @@ export default function CheckinTiketPage() {
       setCheckInStatus(null);
       setErrorMessage("");
       
+      // Validasi tanggal menggunakan eventData yang sudah di-fetch
+      if (eventData) {
+        const now = new Date();
+        const eventDateStart = eventData.date_start ? new Date(eventData.date_start) : null;
+        const eventDateEnd = eventData.date_end ? new Date(eventData.date_end) : null;
+        
+        // Check if event hasn't started yet
+        if (eventDateStart && now < eventDateStart) {
+          setTicketData({
+            event_name: eventData.name,
+          });
+          setCheckInStatus('not_started');
+          setErrorMessage("Event belum dimulai. Tiket ini belum bisa digunakan untuk check-in.");
+          setShowResult(true);
+          showNotification("Tiket belum bisa digunakan, event belum dimulai", "Belum Jadwalnya", "warning");
+          setIsProcessing(false);
+          return;
+        }
+        
+        // Check if event has ended (expired)
+        if (eventDateEnd && now > eventDateEnd) {
+          setTicketData({
+            event_name: eventData.name,
+          });
+          setCheckInStatus('expired');
+          setErrorMessage("Waktu event sudah berakhir. Tiket ini sudah tidak berlaku.");
+          setShowResult(true);
+          showNotification("Tiket sudah kadaluarsa", "Tiket Kadaluarsa", "error");
+          setIsProcessing(false);
+          return;
+        }
+      }
+      
+      // Proceed with check-in if dates are valid
       const response = await ticketAPI.checkInTicket(eventId, ticketCode);
       
       if (response.data) {
@@ -165,9 +202,60 @@ export default function CheckinTiketPage() {
       console.error("Check-in error:", error);
       
       const errorMsg = error.response?.data?.error || "Terjadi kesalahan saat check-in";
+      const errorStatus = error.response?.data?.status || null;
+      const backendTicketData = error.response?.data?.ticket || null;
+      const backendUsedAt = error.response?.data?.used_at || null;
+      
       setErrorMessage(errorMsg);
       
-      if (errorMsg.includes("already used") || errorMsg.includes("sudah digunakan")) {
+      // Set ticket data from backend response if available, otherwise from eventData
+      if (backendTicketData) {
+        setTicketData(backendTicketData);
+      } else if (eventData) {
+        setTicketData({
+          event_name: eventData.name,
+        });
+      }
+      
+      // Set used_at time if available
+      if (backendUsedAt) {
+        setUsedAtTime(backendUsedAt);
+      }
+      
+      // Handle backend error status first (more reliable)
+      if (errorStatus === 'not_started') {
+        setCheckInStatus('not_started');
+        setShowResult(true);
+        showNotification("Tiket belum bisa digunakan, event belum dimulai", "Belum Jadwalnya", "warning");
+      } else if (errorStatus === 'expired') {
+        setCheckInStatus('expired');
+        setShowResult(true);
+        showNotification("Tiket sudah kadaluarsa", "Tiket Kadaluarsa", "error");
+      } else if (errorStatus === 'already_used') {
+        setCheckInStatus('already_used');
+        setShowResult(true);
+        showNotification("Tiket sudah pernah digunakan", "Check-in Gagal", "warning");
+      } else if (errorStatus === 'cancelled') {
+        setCheckInStatus('error');
+        setErrorMessage("Tiket telah dibatalkan dan tidak dapat digunakan.");
+        setShowResult(true);
+        showNotification("Tiket dibatalkan", "Check-in Gagal", "error");
+      } else if (errorStatus === 'inactive') {
+        setCheckInStatus('error');
+        setErrorMessage("Tiket tidak aktif dan tidak dapat digunakan.");
+        setShowResult(true);
+        showNotification("Tiket tidak aktif", "Check-in Gagal", "error");
+      } 
+      // Fallback to error message parsing
+      else if (errorMsg.includes("not started") || errorMsg.includes("belum dimulai") || errorMsg.includes("belum jadwal")) {
+        setCheckInStatus('not_started');
+        setShowResult(true);
+        showNotification("Tiket belum bisa digunakan, event belum dimulai", "Belum Jadwalnya", "warning");
+      } else if (errorMsg.includes("expired") || errorMsg.includes("kadaluarsa") || errorMsg.includes("berakhir") || errorMsg.includes("ended")) {
+        setCheckInStatus('expired');
+        setShowResult(true);
+        showNotification("Tiket sudah kadaluarsa", "Tiket Kadaluarsa", "error");
+      } else if (errorMsg.includes("already used") || errorMsg.includes("sudah digunakan")) {
         setCheckInStatus('already_used');
         setShowResult(true);
         showNotification("Tiket sudah pernah digunakan", "Check-in Gagal", "warning");
@@ -213,6 +301,7 @@ export default function CheckinTiketPage() {
     setErrorMessage("");
     setShowResult(false);
     setIsProcessing(false);
+    setUsedAtTime(null);
   };
 
   // Fungsi untuk kembali
@@ -355,7 +444,7 @@ export default function CheckinTiketPage() {
                       <Calendar className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Tanggal</p>
+                      <p className="text-xs text-gray-500">Tanggal Mulai</p>
                       <p className="font-medium text-gray-900">{formatDate(eventData.date_start)}</p>
                     </div>
                   </div>
@@ -366,7 +455,7 @@ export default function CheckinTiketPage() {
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Waktu</p>
-                      <p className="font-medium text-gray-900">{formatTime(eventData.date_start)}</p>
+                      <p className="font-medium text-gray-900">{formatTime(eventData.date_start)} - {formatTime(eventData.date_end)}</p>
                     </div>
                   </div>
                   
@@ -523,14 +612,14 @@ export default function CheckinTiketPage() {
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <DetailItem
-                              icon={<QrCode className="w-5 h-5 text-gray-500" />}
-                              label="Kode Tiket"
-                              value={ticketData.code}
+                              icon={<Building2 className="w-5 h-5 text-gray-500" />}
+                              label="Nama Event"
+                              value={ticketData.event_name}
                             />
                             <DetailItem
                               icon={<Tag className="w-5 h-5 text-gray-500" />}
-                              label="ID Tiket"
-                              value={ticketData.ticket_id}
+                              label="Kategori Tiket"
+                              value={ticketData.ticket_category}
                             />
                             <DetailItem
                               icon={<Shield className="w-5 h-5 text-gray-500" />}
@@ -542,31 +631,205 @@ export default function CheckinTiketPage() {
                               }
                             />
                             <DetailItem
+                              icon={<CheckCircle2 className="w-5 h-5 text-green-500" />}
+                              label="Waktu Check-in"
+                              value={
+                                <span className="text-green-700 font-semibold">
+                                  {formatDateTime(ticketData.checked_in_at)}
+                                </span>
+                              }
+                            />
+                            <DetailItem
                               icon={<Calendar className="w-5 h-5 text-gray-500" />}
-                              label="Kategori Tiket"
-                              value={ticketData.ticket_category}
-                            />
-                            <DetailItem
-                              icon={<Building2 className="w-5 h-5 text-gray-500" />}
-                              label="Nama Event"
-                              value={ticketData.event_name}
-                            />
-                            <DetailItem
-                              icon={<Clock className="w-5 h-5 text-gray-500" />}
-                              label="Waktu Mulai"
+                              label="Jadwal Tiket Mulai"
                               value={formatDateTime(ticketData.date_start)}
                             />
                             <DetailItem
                               icon={<Clock className="w-5 h-5 text-gray-500" />}
-                              label="Waktu Berakhir"
+                              label="Jadwal Tiket Berakhir"
                               value={formatDateTime(ticketData.date_end)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Not Started State - TIKET BELUM JADWALNYA */}
+                    {checkInStatus === 'not_started' && (
+                      <div className="space-y-6">
+                        <motion.div 
+                          initial={{ scale: 0.8 }}
+                          animate={{ scale: 1 }}
+                          className="text-center py-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200"
+                        >
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                            className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-4"
+                          >
+                            <CalendarClock className="w-10 h-10 text-blue-600" />
+                          </motion.div>
+                          <h2 className="text-2xl font-bold text-blue-800">Belum Jadwalnya</h2>
+                          <p className="text-blue-600 mt-2">Event untuk tiket ini belum dimulai</p>
+                        </motion.div>
+
+                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                          <div className="flex items-start gap-3">
+                            <CalendarClock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-semibold text-blue-800">Informasi</h4>
+                              <p className="text-sm text-blue-700 mt-1">
+                                Tiket ini belum dapat digunakan karena event belum dimulai. 
+                                Check-in hanya dapat dilakukan saat event sudah berjalan.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Ticket Stats - Tidak dihitung sebagai presensi */}
+                        <div className="bg-gray-50 rounded-xl p-6 space-y-4 border border-gray-200">
+                          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Ticket className="w-5 h-5 text-blue-600" />
+                            Informasi Event
+                            <span className="text-xs font-normal text-gray-500 ml-2">(Tidak dihitung sebagai presensi)</span>
+                          </h3>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <DetailItem
+                              icon={<Building2 className="w-5 h-5 text-gray-500" />}
+                              label="Nama Event"
+                              value={ticketData?.event_name || eventData?.name || "-"}
+                            />
+                            <DetailItem
+                              icon={<Tag className="w-5 h-5 text-gray-500" />}
+                              label="Kategori Tiket"
+                              value={ticketData?.ticket_category || "-"}
+                            />
+                            <DetailItem
+                              icon={<Shield className="w-5 h-5 text-gray-500" />}
+                              label="Status"
+                              value={
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  Belum Dapat Digunakan
+                                </span>
+                              }
+                            />
+                            <DetailItem
+                              icon={<CalendarClock className="w-5 h-5 text-blue-500" />}
+                              label="Jadwal Event Mulai"
+                              value={
+                                <span className="text-blue-700 font-semibold">
+                                  {formatDateTime(ticketData?.date_start || eventData?.date_start)}
+                                </span>
+                              }
                             />
                             <DetailItem
                               icon={<Clock className="w-5 h-5 text-gray-500" />}
-                              label="Waktu Check-in"
-                              value={formatDateTime(ticketData.checked_in_at)}
+                              label="Jadwal Event Berakhir"
+                              value={formatDateTime(ticketData?.date_end || eventData?.date_end)}
                             />
                           </div>
+
+                          {/* Countdown hint */}
+                          {(ticketData?.date_start || eventData?.date_start) && (
+                            <div className="mt-4 p-3 bg-blue-100 rounded-lg border border-blue-200">
+                              <p className="text-sm text-blue-800 flex items-center gap-2">
+                                <Clock className="w-4 h-4" />
+                                Event akan dimulai pada: <strong>{formatDateTime(ticketData?.date_start || eventData?.date_start)}</strong>
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Expired State - TIKET KADALUARSA */}
+                    {checkInStatus === 'expired' && (
+                      <div className="space-y-6">
+                        <motion.div 
+                          initial={{ scale: 0.8 }}
+                          animate={{ scale: 1 }}
+                          className="text-center py-6 bg-gradient-to-r from-gray-100 to-slate-100 rounded-2xl border border-gray-300"
+                        >
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                            className="inline-flex items-center justify-center w-20 h-20 bg-gray-200 rounded-full mb-4"
+                          >
+                            <TimerOff className="w-10 h-10 text-gray-600" />
+                          </motion.div>
+                          <h2 className="text-2xl font-bold text-gray-800">Tiket Kadaluarsa</h2>
+                          <p className="text-gray-600 mt-2">Waktu event untuk tiket ini sudah berakhir</p>
+                        </motion.div>
+
+                        <div className="bg-gray-100 rounded-xl p-4 border border-gray-300">
+                          <div className="flex items-start gap-3">
+                            <CalendarX className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-semibold text-gray-800">Tiket Tidak Berlaku</h4>
+                              <p className="text-sm text-gray-700 mt-1">
+                                Tiket ini sudah tidak dapat digunakan karena waktu event sudah berakhir. 
+                                Tiket ini sudah kadaluarsa.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Ticket Stats - Tidak dihitung sebagai presensi */}
+                        <div className="bg-gray-50 rounded-xl p-6 space-y-4 border border-gray-200">
+                          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Ticket className="w-5 h-5 text-gray-500" />
+                            Informasi Event
+                            <span className="text-xs font-normal text-gray-500 ml-2">(Tidak dihitung sebagai presensi)</span>
+                          </h3>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <DetailItem
+                              icon={<Building2 className="w-5 h-5 text-gray-500" />}
+                              label="Nama Event"
+                              value={ticketData?.event_name || eventData?.name || "-"}
+                            />
+                            <DetailItem
+                              icon={<Tag className="w-5 h-5 text-gray-500" />}
+                              label="Kategori Tiket"
+                              value={ticketData?.ticket_category || "-"}
+                            />
+                            <DetailItem
+                              icon={<Shield className="w-5 h-5 text-gray-500" />}
+                              label="Status"
+                              value={
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+                                  Kadaluarsa
+                                </span>
+                              }
+                            />
+                            <DetailItem
+                              icon={<Clock className="w-5 h-5 text-gray-500" />}
+                              label="Jadwal Event Mulai"
+                              value={formatDateTime(ticketData?.date_start || eventData?.date_start)}
+                            />
+                            <DetailItem
+                              icon={<CalendarX className="w-5 h-5 text-red-500" />}
+                              label="Jadwal Event Berakhir"
+                              value={
+                                <span className="text-red-600 font-semibold">
+                                  {formatDateTime(ticketData?.date_end || eventData?.date_end)}
+                                </span>
+                              }
+                            />
+                          </div>
+
+                          {/* Expired notice */}
+                          {(ticketData?.date_end || eventData?.date_end) && (
+                            <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
+                              <p className="text-sm text-red-800 flex items-center gap-2">
+                                <TimerOff className="w-4 h-4" />
+                                Event telah berakhir pada: <strong>{formatDateTime(ticketData?.date_end || eventData?.date_end)}</strong>
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -597,10 +860,59 @@ export default function CheckinTiketPage() {
                             <div>
                               <h4 className="font-semibold text-amber-800">Perhatian</h4>
                               <p className="text-sm text-amber-700 mt-1">
-                                Tiket dengan kode <span className="font-mono font-bold">{scanResult}</span> sudah digunakan. 
+                                Tiket ini sudah digunakan untuk check-in sebelumnya. 
                                 Mohon periksa kembali atau hubungi panitia jika ada masalah.
                               </p>
                             </div>
+                          </div>
+                        </div>
+
+                        {/* Info Tiket & Event */}
+                        <div className="bg-gray-50 rounded-xl p-6 space-y-4 border border-gray-200">
+                          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Ticket className="w-5 h-5 text-amber-600" />
+                            Informasi Tiket
+                          </h3>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <DetailItem
+                              icon={<Building2 className="w-5 h-5 text-gray-500" />}
+                              label="Nama Event"
+                              value={ticketData?.event_name || eventData?.name || "-"}
+                            />
+                            <DetailItem
+                              icon={<Tag className="w-5 h-5 text-gray-500" />}
+                              label="Kategori Tiket"
+                              value={ticketData?.ticket_category || "-"}
+                            />
+                            <DetailItem
+                              icon={<Shield className="w-5 h-5 text-gray-500" />}
+                              label="Status Tiket"
+                              value={
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                  Sudah Digunakan
+                                </span>
+                              }
+                            />
+                            <DetailItem
+                              icon={<CheckCircle2 className="w-5 h-5 text-amber-500" />}
+                              label="Waktu Digunakan"
+                              value={
+                                <span className="text-amber-700 font-semibold">
+                                  {formatDateTime(ticketData?.used_at || usedAtTime)}
+                                </span>
+                              }
+                            />
+                            <DetailItem
+                              icon={<Calendar className="w-5 h-5 text-gray-500" />}
+                              label="Jadwal Event Mulai"
+                              value={formatDateTime(ticketData?.date_start || eventData?.date_start)}
+                            />
+                            <DetailItem
+                              icon={<Clock className="w-5 h-5 text-gray-500" />}
+                              label="Jadwal Event Berakhir"
+                              value={formatDateTime(ticketData?.date_end || eventData?.date_end)}
+                            />
                           </div>
                         </div>
                       </div>
@@ -639,13 +951,6 @@ export default function CheckinTiketPage() {
                               </ul>
                             </div>
                           </div>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                          <p className="text-sm text-gray-600">
-                            <span className="font-semibold">Kode yang di-scan:</span>{" "}
-                            <span className="font-mono bg-gray-200 px-2 py-1 rounded">{scanResult}</span>
-                          </p>
                         </div>
                       </div>
                     )}

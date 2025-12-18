@@ -67,6 +67,29 @@ export default function CariEvent() {
     return `${startFormatted} - ${endFormatted}`;
   };
 
+  // Fungsi untuk menghitung hari menuju event
+  const getDaysUntilEvent = (dateStart) => {
+    if (!dateStart) return null;
+    const now = new Date();
+    const eventDate = new Date(dateStart);
+    const timeDiff = eventDate - now;
+    return Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+  };
+
+  // Fungsi untuk mendapatkan label waktu
+  const getTimeLabel = (dateStart, status) => {
+    if (status === "active") return { text: "Sedang Berlangsung", color: "bg-green-600" };
+    
+    const daysUntil = getDaysUntilEvent(dateStart);
+    if (daysUntil === null) return null;
+    
+    if (daysUntil < 0) return null; // Event sudah lewat
+    if (daysUntil === 0) return { text: "Hari ini", color: "bg-emerald-500" };
+    if (daysUntil === 1) return { text: "Besok", color: "bg-emerald-500" };
+    if (daysUntil <= 7) return { text: `${daysUntil} hari`, color: "bg-emerald-500" };
+    return { text: `${daysUntil} hari`, color: "bg-blue-500" };
+  };
+
   const getLowestPrice = (ticketCategories) => {
     if (!ticketCategories || ticketCategories.length === 0) return 0;
     const prices = ticketCategories.map((tc) => tc.price);
@@ -246,19 +269,24 @@ export default function CariEvent() {
       result = result.filter(event => event.status === "ended");
     }
 
+    // Logika sorting dengan penanganan khusus untuk waktu terdekat
     if (sortBy === "popularitas") {
       result = result.sort((a, b) => (b.total_likes || 0) - (a.total_likes || 0));
     } else if (sortBy === "terlaris") {
       result = result.sort((a, b) => (b.total_tickets_sold || 0) - (a.total_tickets_sold || 0));
     } else if (sortBy === "terdekat") {
       const now = new Date();
+      
+      // Filter out events that have ended (date_end < now)
+      result = result.filter(event => {
+        const eventEndDate = new Date(event.date_end);
+        return eventEndDate >= now; // Hanya event yang belum berakhir
+      });
+      
+      // Sort by date_start ascending (nearest first)
       result = result.sort((a, b) => {
         const dateA = new Date(a.date_start);
         const dateB = new Date(b.date_start);
-        const isUpcomingA = dateA >= now;
-        const isUpcomingB = dateB >= now;
-        if (isUpcomingA && !isUpcomingB) return -1;
-        if (!isUpcomingA && isUpcomingB) return 1;
         return dateA - dateB;
       });
     }
@@ -309,6 +337,10 @@ export default function CariEvent() {
   };
 
   const handleSortChange = (value) => {
+    // Jika memilih "terdekat" dan statusFilter adalah "ended", reset statusFilter
+    if (value === "terdekat" && statusFilter === "ended") {
+      setStatusFilter("");
+    }
     setSortBy(value);
     const newParams = new URLSearchParams(searchParams);
     newParams.set('sort', value);
@@ -317,7 +349,6 @@ export default function CariEvent() {
 
   // Handler untuk status filter dengan logic untuk reset sortBy jika perlu
   const handleStatusFilterChange = (status) => {
-    setStatusFilter(status);
     // Jika memilih "ended" dan sortBy adalah "terdekat", reset ke popularitas
     if (status === "ended" && sortBy === "terdekat") {
       setSortBy("popularitas");
@@ -325,6 +356,7 @@ export default function CariEvent() {
       newParams.set('sort', 'popularitas');
       setSearchParams(newParams);
     }
+    setStatusFilter(status);
   };
 
   const handleCardClick = (id) => navigate(`/detailEvent/${id}`);
@@ -375,6 +407,9 @@ export default function CariEvent() {
     }
     return pages;
   };
+
+  // Check if "ended" filter should be disabled
+  const isEndedFilterDisabled = sortBy === "terdekat";
 
   return (
     <div className="min-h-screen py-8">
@@ -461,9 +496,12 @@ export default function CariEvent() {
               </button>
               <button
                 onClick={() => handleStatusFilterChange("ended")}
+                disabled={isEndedFilterDisabled}
                 className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-medium transition-all whitespace-nowrap text-sm ${
                   statusFilter === 'ended'
                     ? 'bg-gray-500 text-white shadow-md'
+                    : isEndedFilterDisabled
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -504,14 +542,14 @@ export default function CariEvent() {
                 disabled={statusFilter === "ended"}
                 className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-medium transition-all whitespace-nowrap text-sm ${
                   statusFilter === "ended"
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60'
                     : sortBy === 'terdekat'
                     ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 <Clock size={16} />
-                Terdekat
+                Waktu Terdekat
               </button>
             </div>
 
@@ -662,6 +700,7 @@ export default function CariEvent() {
                         getCategoryColor={getCategoryColor}
                         getParentCategory={getParentCategory}
                         getStatusLabel={getStatusLabel}
+                        getTimeLabel={getTimeLabel}
                         isLiked={likedEvents.has(event.event_id)}
                         onLike={(e) => handleLikeEvent(event.event_id, e)}
                         isLoggedIn={isLoggedIn}
@@ -741,13 +780,19 @@ export default function CariEvent() {
 // Event Card Component - Mobile Optimized
 function EventCard({ 
   event, eventCategories, onClick, formatRupiah, formatDate, formatNumber, getLowestPrice,
-  getCategoryColor, getParentCategory, getStatusLabel, isLiked, onLike,
+  getCategoryColor, getParentCategory, getStatusLabel, getTimeLabel, isLiked, onLike,
   isLoggedIn, sortBy, canLike, statusFilter
 }) {
   const minPrice = getLowestPrice(event.ticket_categories);
   const parentCategory = getParentCategory(event.category, eventCategories);
   const isEnded = event.status === "ended";
   const statusLabel = getStatusLabel(event.status);
+  const timeLabel = getTimeLabel(event.date_start, event.status);
+  
+  // Tentukan label mana yang akan ditampilkan
+  const showTimeLabel = sortBy === "terdekat" && timeLabel;
+  const showStatusLabel = !showTimeLabel && statusLabel && 
+    (statusFilter === "" || statusFilter === event.status);
 
   return (
     <motion.div
@@ -765,12 +810,14 @@ function EventCard({
             e.target.src = "https://axistechindia.com/images/image%20not%20available.jpg";
           }}
         />
+        
         {/* Category Badge */}
         <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
           <span className={`${getCategoryColor(event.category, eventCategories, event.status)} text-white text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-medium`}>
             {isEnded ? "Berakhir" : parentCategory}
           </span>
         </div>
+        
         {/* Like Button */}
         <button
           onClick={onLike}
@@ -786,8 +833,17 @@ function EventCard({
           <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-current' : ''}`} />
         </button>
         
-        {/* Status Label - Tampil hanya ketika filter "semua" */}
-        {statusFilter === "" && statusLabel && (
+        {/* Time Label - Tampilkan ketika sortBy = "terdekat" dan ada label waktu */}
+        {showTimeLabel && (
+          <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3">
+            <span className={`${timeLabel.color} text-white text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-medium`}>
+              {timeLabel.text}
+            </span>
+          </div>
+        )}
+        
+        {/* Status Label - Tampil sesuai kondisi */}
+        {showStatusLabel && (
           <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3">
             <span className={`${statusLabel.bgColor} text-white text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-medium`}>
               {statusLabel.text}

@@ -144,8 +144,9 @@ export default function TiketSaya() {
       return "used";
     }
     
-    const eventEnd = ticket.event?.date_end || ticket.ticket_category?.date_time_end;
-    if (eventEnd && new Date(eventEnd) < new Date()) {
+    // Tiket dianggap kadaluarsa hanya jika tanggal selesai ticket category sudah terlewati
+    const categoryEnd = ticket.ticket_category?.date_time_end;
+    if (categoryEnd && new Date(categoryEnd) < new Date()) {
       return "expired";
     }
     
